@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'class-names';
+
 import IconButton, { GithubButton } from './IconButton';
 import queryString from 'query-string';
 import { useLocalStorage } from './hooks';
-import { FaCanadianMapleLeaf } from 'react-icons/fa';
+import NumberInput from './NumberInput'
+import { FaCanadianMapleLeaf, FaHourglassStart } from 'react-icons/fa';
 
 export default function AppContainer() {
 	return (
@@ -63,9 +66,11 @@ function NavbarItemLink({ href, children }) {
 
 function SavingsRateCalculator() {
 	const [annualIncome, setAnnualIncome] = useState(40000);
+	const [hourlyIncome, setHourlyIncome] = useState();
 	const [incomeFormat, setIncomeFormat] = useState('annual');
 	const [hours, setHours] = useState(40);
 	const [annualExpenses, setAnnualExpenses] = useState(20000);
+	const [expenseFormat, setExpenseFormat] = useState('annual');
 	const [annualSavings, setAnnualSavings] = useState(20000);
 	const [savingsRate, setSavingsRate] = useState(50);
 	const [returnRate, setReturnRate] = useState(5);
@@ -90,6 +95,19 @@ function SavingsRateCalculator() {
 
 	const fireTarget = annualExpenses / withdrawalFloat;
 
+	function updateAnnualIncome(annualIncome) {
+		setAnnualIncome(annualIncome);
+		setAnnualSavings(annualIncome - annualExpenses);
+		if (annualIncome > 0) {
+			setSavingsRate(
+				Math.max(
+					0,
+					((annualIncome - annualExpenses) / annualIncome) * 100,
+				),
+			);
+		}
+	}
+
 	return (
 		<div
 			style={{
@@ -98,135 +116,137 @@ function SavingsRateCalculator() {
 				marginLeft: '1rem',
 			}}
 		>
-			<label className="margin-bottom-1">
-				Current
-				<ButtonLabelToggle
-					states={['annual', 'hourly']}
-					value={incomeFormat}
-					setValue={setIncomeFormat}
-				/>
-				income{' '}
-				<input
-					className="input is-small numeric"
-					type="number"
+			<div className="field is-flex">
+				<NumberInput
+					className="mb-0"
+					label={
+						<>
+							<ButtonLabelToggle
+								states={['annual', 'hourly']}
+								value={incomeFormat}
+								setValue={setIncomeFormat}
+							/>{' '}
+							Income
+						</>
+					}
+					labelClassName="is-flex is-align-items-center"
 					value={
 						incomeFormat === 'annual'
 							? annualIncome
-							: Math.round((annualIncome / (52 * hours)) * 100) /
-							  100
+							: hourlyIncome ||
+							  Math.round((annualIncome / (52 * hours)) * 100) /
+									100
 					}
-					onChange={(e) => {
-						const newValue = e.target.value;
+					onChange={(newValue) => {
+						if (incomeFormat === 'hourly') {
+							setHourlyIncome(newValue);
+						}
 						const annualIncome =
 							incomeFormat === 'annual'
 								? newValue
 								: newValue * (52 * hours);
-						setAnnualIncome(annualIncome);
-						setAnnualSavings(annualIncome - annualExpenses);
-						if (annualIncome > 0) {
-							setSavingsRate(
-								Math.max(
-									0,
-									((annualIncome - annualExpenses) /
-										annualIncome) *
-										100,
-								),
-							);
-						}
+						updateAnnualIncome(annualIncome);
 					}}
-				/>{' '}
-				$
-			</label>
-			<div
-				className="margin-bottom-1"
-				style={{ display: 'flex', alignItems: 'center' }}
-			>
-				<div style={{ display: 'flex', flexDirection: 'column' }}>
-					<label>
-						Current annual expenses{' '}
-						<input
-							className="input is-small numeric"
-							type="number"
-							value={annualExpenses}
-							onChange={(e) => {
-								const newValue = e.target.value;
-								setAnnualExpenses(newValue);
-								setAnnualSavings(annualIncome - newValue);
-								if (annualIncome > 0) {
-									setSavingsRate(
-										Math.max(
-											0,
-											(1 - newValue / annualIncome) * 100,
-										),
-									);
-								}
-							}}
-						/>{' '}
-						$
-					</label>
-					<label>
-						Current annual savings{' '}
-						<input
-							className="input is-small numeric"
-							type="number"
-							value={annualSavings}
-							onChange={(e) => {
-								const newValue = e.target.value;
-								setAnnualSavings(newValue);
-								setAnnualExpenses(annualIncome - newValue);
-								if (annualIncome > 0) {
-									setSavingsRate(
-										Math.max(
-											0,
-											(newValue / annualIncome) * 100,
-										),
-									);
-								}
-							}}
-						/>{' '}
-						$
-					</label>
-				</div>
-				<label className="numeric-container margin-left-2">
-					Savings Rate{' '}
-					<input
-						className="numeric"
-						type="number"
-						value={savingsRate}
-						onChange={(e) => {
-							const newValue = e.target.value;
-							setSavingsRate(newValue);
-							setAnnualSavings(annualIncome * (newValue / 100));
-							setAnnualExpenses(
-								annualIncome * (1 - newValue / 100),
-							);
+					suffix="$"
+					help="After tax (+ RRSP contributions)"
+				/>
+				{incomeFormat === 'hourly' && (
+					<NumberInput
+						className="ml-4"
+						label="Hours"
+						value={hours}
+						onChange={(newValue) => {
+							setHours(newValue);
+							if (newValue > 0 && hourlyIncome > 0) {
+								updateAnnualIncome(hourlyIncome * (52 * hours));
+							}
 						}}
-					/>{' '}
-					%
-				</label>
+					/>
+				)}
+				{/* todo: allow pre-tax + province? or just link to Wealthsimple? */}
 			</div>
-			<div className="margin-top-2 flex-column">
-				<label className="margin-bottom-1">
-					Annual return on investment{' '}
-					<input
-						className="input is-small numeric"
-						type="number"
-						value={returnRate}
-						onChange={(newValue) => setReturnRate(newValue)}
-					/>{' '}
-					%
-				</label>
-				<label className="margin-bottom-1">
-					Withdrawal Rate{' '}
-					<input
-						className="input is-small numeric"
-						type="number"
-						value={withdrawalRate}
-						onChange={(newValue) => setWithdrawalRate(newValue)}
-					/>{' '}
-					%
-				</label>
+			<div className="field is-flex is-align-items-center">
+				<div style={{ display: 'flex', flexDirection: 'column' }}>
+					<NumberInput
+						label={
+							<>
+								<ButtonLabelToggle
+									states={['annual', 'monthly']}
+									value={expenseFormat}
+									setValue={setExpenseFormat}
+								/>{' '}
+								Expenses
+							</>
+						}
+						labelClassName="is-flex is-align-items-center"
+						value={
+							expenseFormat === 'annual'
+								? annualExpenses
+								: Math.round(annualExpenses / 12)
+						}
+						suffix="$"
+						onChange={(newValue) => {
+							const annualExpenses =
+								expenseFormat === 'annual'
+									? newValue
+									: newValue * 12;
+							setAnnualExpenses(annualExpenses);
+							setAnnualSavings(annualIncome - annualExpenses);
+							if (annualIncome > 0) {
+								const newRate =
+									1 - annualExpenses / annualIncome;
+								setSavingsRate(Math.max(0, newRate * 100));
+							}
+						}}
+					/>
+
+					<NumberInput
+						label="Annual Savings"
+						value={annualSavings}
+						suffix="$"
+						onChange={(value) => {
+							setAnnualSavings(value);
+							setAnnualExpenses(annualIncome - value);
+							if (annualIncome > 0) {
+								setSavingsRate(
+									Math.max(0, (value / annualIncome) * 100),
+								);
+							}
+						}}
+					/>
+				</div>
+				<div className="padding-x-4">=</div>
+				<NumberInput
+					label="Savings Rate"
+					value={savingsRate}
+					suffix="%"
+					onChange={(newValue) => {
+						setSavingsRate(newValue);
+						setAnnualSavings(annualIncome * (newValue / 100));
+						setAnnualExpenses(annualIncome * (1 - newValue / 100));
+					}}
+				/>
 			</div>
+			<NumberInput
+				label="Annual return on investment"
+				labelClassName="is-small"
+				value={returnRate}
+				suffix="%"
+				onChange={(newValue) => {
+					setReturnRate(newValue);
+				}}
+				help="After subtracting inflation (eg. 2%) and fees (eg. 0.22%)"
+			/>
+			<NumberInput
+				label="Withdrawal Rate"
+				labelClassName="is-small"
+				value={withdrawalRate}
+				suffix="%"
+				onChange={(newValue) => {
+					setWithdrawalRate(newValue);
+				}}
+			/>
+
 			{fireTarget > 0 && <div>Fire Target: ${fireTarget}</div>}
 			<div>
 				Can retire in {Math.round(retireInYears * 10) / 10} years.
@@ -243,7 +263,7 @@ ButtonLabelToggle.propTypes = {
 function ButtonLabelToggle({ states, value, setValue }) {
 	return (
 		<button
-			className="button is-text"
+			className="button is-text inline-button is-capitalized"
 			type="button"
 			onClick={() => {
 				setValue((value) => {
