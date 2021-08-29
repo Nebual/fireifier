@@ -5,19 +5,28 @@ import classNames from 'class-names';
 import IconButton, { GithubButton } from './IconButton';
 import queryString from 'query-string';
 import { useLocalStorage } from './hooks';
-import NumberInput from './NumberInput'
-import { FaCanadianMapleLeaf, FaHourglassStart } from 'react-icons/fa';
+import NumberInput from './NumberInput';
+import {
+	FaCanadianMapleLeaf,
+	FaGithub,
+} from 'react-icons/fa';
+import {
+	calcFireTarget,
+	calcRetireYears,
+	convertToAnnual,
+	round,
+} from './calculations';
+import ExtraSpendings from './ExtraSpendings';
 
 export default function AppContainer() {
 	return (
 		<>
-			<nav className="navbar is-spaced">
+			<nav className="navbar is-spaced is-block-touch">
 				<div className="navbar-brand">
 					<div className="navbar-item">
-						<h1 className="title is-4">Nebmato</h1>
-					</div>
-					<div className="navbar-item">
-						<GithubButton />
+						<h1 className="title is-4">
+							Neb&apos;s FIRE Calculator
+						</h1>
 					</div>
 				</div>
 				<div className="navbar-item has-dropdown is-hoverable">
@@ -42,12 +51,21 @@ export default function AppContainer() {
 						<hr className="navbar-divider" />
 						<NavbarItemLink href="https://www.ratehub.ca/mortgage-payment-calculator">
 							Mortgage Payment, rates{' '}
-							<FaCanadianMapleLeaf className="margin-left-1" />
+							<FaCanadianMapleLeaf className="ml-1" />
 						</NavbarItemLink>
 						<NavbarItemLink href="https://www.ratehub.ca/mortgage-affordability-calculator">
 							Mortgage Affordability (given income + Down Payment){' '}
-							<FaCanadianMapleLeaf className="margin-left-1" />
+							<FaCanadianMapleLeaf className="ml-1" />
 						</NavbarItemLink>
+						<hr className="navbar-divider" />
+						<a
+							className="navbar-item"
+							href="https://github.com/Nebual/money"
+							target="_blank"
+							rel="noreferrer"
+						>
+							<FaGithub className="mr-1" /> Calculator Source Code
+						</a>
 					</div>
 				</div>
 			</nav>
@@ -56,7 +74,11 @@ export default function AppContainer() {
 	);
 }
 
-function NavbarItemLink({ href, children }) {
+NavbarItemLink.propTypes = {
+	href: PropTypes.string.isRequired,
+	children: PropTypes.node.isRequired,
+}
+function NavbarItemLink({ href, children='' }) {
 	return (
 		<a href={href} className="navbar-item">
 			{children}
@@ -72,6 +94,7 @@ function SavingsRateCalculator() {
 	const [annualExpenses, setAnnualExpenses] = useState(20000);
 	const [expenseFormat, setExpenseFormat] = useState('annual');
 	const [annualSavings, setAnnualSavings] = useState(20000);
+	const [extraSpendings, setExtraSpendings] = useState([]);
 	const [savingsRate, setSavingsRate] = useState(50);
 	const [returnRate, setReturnRate] = useState(5);
 	const [withdrawalRate, setWithdrawalRate] = useState(4);
@@ -83,17 +106,18 @@ function SavingsRateCalculator() {
 	// const retireInYears = (-Math.log(1 + interest * fireTarget / annualSavings)) / Math.log(1 + interest)
 	// const retireInYears = 1;
 
-	const returnFloat = returnRate / 100;
-	const savingsFloat = savingsRate / 100;
-	const withdrawalFloat = withdrawalRate / 100;
-	const retireInYears =
-		Math.log(
-			1 +
-				(returnFloat * ((1 - savingsFloat) / withdrawalFloat)) /
-					savingsFloat,
-		) / Math.log(1 + returnFloat);
+	const sumExtraSpendings = extraSpendings.reduce(
+		(a, data) =>
+			Number(a) + convertToAnnual(Number(data.value), data.format),
+		0,
+	);
 
-	const fireTarget = annualExpenses / withdrawalFloat;
+	const retireInYears = calcRetireYears(
+		returnRate,
+		savingsRate,
+		withdrawalRate,
+	);
+	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
 
 	function updateAnnualIncome(annualIncome) {
 		setAnnualIncome(annualIncome);
@@ -134,8 +158,7 @@ function SavingsRateCalculator() {
 						incomeFormat === 'annual'
 							? annualIncome
 							: hourlyIncome ||
-							  Math.round((annualIncome / (52 * hours)) * 100) /
-									100
+							  round(annualIncome / (52 * hours), 2)
 					}
 					onChange={(newValue) => {
 						if (incomeFormat === 'hourly') {
@@ -165,8 +188,8 @@ function SavingsRateCalculator() {
 				)}
 				{/* todo: allow pre-tax + province? or just link to Wealthsimple? */}
 			</div>
-			<div className="field is-flex is-align-items-center">
-				<div style={{ display: 'flex', flexDirection: 'column' }}>
+			<div className="field is-flex is-align-items-center is-flex-wrap-wrap">
+				<div className="field is-flex is-flex-direction-column">
 					<NumberInput
 						label={
 							<>
@@ -215,10 +238,11 @@ function SavingsRateCalculator() {
 						}}
 					/>
 				</div>
-				<div className="padding-x-4">=</div>
+				<div className="px-4">=</div>
 				<NumberInput
 					label="Savings Rate"
 					value={savingsRate}
+					className="mr-4"
 					suffix="%"
 					onChange={(newValue) => {
 						setSavingsRate(newValue);
@@ -226,6 +250,23 @@ function SavingsRateCalculator() {
 						setAnnualExpenses(annualIncome * (1 - newValue / 100));
 					}}
 				/>
+
+				<ExtraSpendings
+					extraSpendings={extraSpendings}
+					setExtraSpendings={setExtraSpendings}
+				/>
+				<button
+					type="button"
+					className="button is-small mt-4"
+					onClick={() =>
+						setExtraSpendings((arr) => [
+							...arr,
+							{ value: 0, format: 'daily' },
+						])
+					}
+				>
+					+
+				</button>
 			</div>
 			<NumberInput
 				label="Annual return on investment"
@@ -247,32 +288,81 @@ function SavingsRateCalculator() {
 				}}
 			/>
 
-			{fireTarget > 0 && <div>Fire Target: ${fireTarget}</div>}
+			{sumExtraSpendings != 0 && (
+				<div className="has-text-info">
+					Extra Annual{' '}
+					{sumExtraSpendings > 0 ? 'Spending' : 'Savings'}: $
+					{Math.abs(round(sumExtraSpendings))}
+				</div>
+			)}
+			{fireTarget > 0 && (
+				<div>
+					Fire Target: ${fireTarget}
+					{sumExtraSpendings != 0 && (
+						<>
+							{' | '}
+							<span className="has-text-info">
+								$
+								{round(
+									calcFireTarget(
+										Number(annualExpenses) +
+											Number(sumExtraSpendings),
+										withdrawalRate,
+									),
+								)}
+							</span>
+						</>
+					)}
+				</div>
+			)}
 			<div>
-				Can retire in {Math.round(retireInYears * 10) / 10} years.
+				Can retire in {round(retireInYears, 1)} years.
+				{sumExtraSpendings != 0 && (
+					<>
+						{' | '}
+						<span className="has-text-info">
+							{sumExtraSpendings > 0 ? '+' : '-'}
+							{round(
+								Math.abs(
+									retireInYears -
+										calcRetireYears(
+											returnRate,
+											(1 -
+												(Number(annualExpenses) +
+													sumExtraSpendings) /
+													Number(annualIncome)) *
+												100,
+											withdrawalRate,
+										),
+								),
+								1,
+							)}{' '}
+							years
+						</span>
+					</>
+				)}
 			</div>
 		</div>
 	);
 }
 
 ButtonLabelToggle.propTypes = {
-	states: PropTypes.arrayOf(PropTypes.string),
-	value: PropTypes.string,
-	setValue: PropTypes.func,
+	states: PropTypes.arrayOf(PropTypes.string).isRequired,
+	value: PropTypes.string.isRequired,
+	setValue: PropTypes.func.isRequired,
+	className: PropTypes.string,
 };
-function ButtonLabelToggle({ states, value, setValue }) {
+export function ButtonLabelToggle({ states, value, setValue, className='' }) {
 	return (
 		<button
-			className="button is-text inline-button is-capitalized"
+			className={`button is-text inline-button is-capitalized ${className}`}
 			type="button"
 			onClick={() => {
-				setValue((value) => {
-					let nextIndex = states.indexOf(value) + 1;
-					if (nextIndex >= states.length) {
-						nextIndex = 0;
-					}
-					return states[nextIndex];
-				});
+				let nextIndex = states.indexOf(value) + 1;
+				if (nextIndex >= states.length) {
+					nextIndex = 0;
+				}
+				setValue(states[nextIndex]);
 			}}
 		>
 			{value}

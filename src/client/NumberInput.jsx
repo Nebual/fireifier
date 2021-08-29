@@ -14,11 +14,11 @@ NumberInput.propTypes = {
 export default function NumberInput({
 	value,
 	onChange,
-	className,
+	className='',
 	label,
-	labelClassName,
-	suffix,
-	help,
+	labelClassName = '',
+	suffix = null,
+	help = null,
 }) {
 	return (
 		<div className={`field ${className}`}>
