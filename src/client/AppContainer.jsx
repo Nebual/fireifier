@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'class-names';
+import {
+	Accordion,
+	AccordionItem,
+	AccordionItemHeading,
+	AccordionItemButton,
+	AccordionItemPanel,
+} from 'react-accessible-accordion';
 
-import IconButton, { GithubButton } from './IconButton';
-import queryString from 'query-string';
-import { useLocalStorage } from './hooks';
+import { useUpdateUrl, useUrlState } from './hooks';
 import NumberInput from './NumberInput';
-import {
-	FaCanadianMapleLeaf,
-	FaGithub,
-} from 'react-icons/fa';
-import {
-	calcFireTarget,
-	calcRetireYears,
-	convertToAnnual,
-	round,
-} from './calculations';
+import { FaCanadianMapleLeaf, FaGithub } from 'react-icons/fa';
+import { calcFireTarget, calcRetireYears, convertToAnnual, round } from './calculations';
 import ExtraSpendings from './ExtraSpendings';
 
 export default function AppContainer() {
@@ -24,9 +21,7 @@ export default function AppContainer() {
 			<nav className="navbar is-spaced is-block-touch">
 				<div className="navbar-brand">
 					<div className="navbar-item">
-						<h1 className="title is-4">
-							Neb&apos;s FIRE Calculator
-						</h1>
+						<h1 className="title is-4">Neb&apos;s FIRE Calculator</h1>
 					</div>
 				</div>
 				<div className="navbar-item has-dropdown is-hoverable">
@@ -50,8 +45,7 @@ export default function AppContainer() {
 						</NavbarItemLink>
 						<hr className="navbar-divider" />
 						<NavbarItemLink href="https://www.ratehub.ca/mortgage-payment-calculator">
-							Mortgage Payment, rates{' '}
-							<FaCanadianMapleLeaf className="ml-1" />
+							Mortgage Payment, rates <FaCanadianMapleLeaf className="ml-1" />
 						</NavbarItemLink>
 						<NavbarItemLink href="https://www.ratehub.ca/mortgage-affordability-calculator">
 							Mortgage Affordability (given income + Down Payment){' '}
@@ -77,8 +71,8 @@ export default function AppContainer() {
 NavbarItemLink.propTypes = {
 	href: PropTypes.string.isRequired,
 	children: PropTypes.node.isRequired,
-}
-function NavbarItemLink({ href, children='' }) {
+};
+function NavbarItemLink({ href, children = '' }) {
 	return (
 		<a href={href} className="navbar-item">
 			{children}
@@ -155,19 +149,13 @@ function SavingsRateCalculator() {
 					}
 					labelClassName="is-flex is-align-items-center"
 					value={
-						incomeFormat === 'annual'
-							? annualIncome
-							: hourlyIncome ||
-							  round(annualIncome / (52 * hours), 2)
+						incomeFormat === 'annual' ? annualIncome : hourlyIncome || round(annualIncome / (52 * hours), 2)
 					}
 					onChange={(newValue) => {
 						if (incomeFormat === 'hourly') {
 							setHourlyIncome(newValue);
 						}
-						const annualIncome =
-							incomeFormat === 'annual'
-								? newValue
-								: newValue * (52 * hours);
+						const annualIncome = incomeFormat === 'annual' ? newValue : newValue * (52 * hours);
 						updateAnnualIncome(annualIncome);
 					}}
 					suffix="$"
@@ -188,7 +176,7 @@ function SavingsRateCalculator() {
 				)}
 				{/* todo: allow pre-tax + province? or just link to Wealthsimple? */}
 			</div>
-			<div className="field is-flex is-align-items-center is-flex-wrap-wrap">
+			<div className="is-flex is-align-items-center is-flex-wrap-wrap">
 				<div className="field is-flex is-flex-direction-column">
 					<NumberInput
 						label={
@@ -202,22 +190,14 @@ function SavingsRateCalculator() {
 							</>
 						}
 						labelClassName="is-flex is-align-items-center"
-						value={
-							expenseFormat === 'annual'
-								? annualExpenses
-								: Math.round(annualExpenses / 12)
-						}
+						value={expenseFormat === 'annual' ? annualExpenses : Math.round(annualExpenses / 12)}
 						suffix="$"
 						onChange={(newValue) => {
-							const annualExpenses =
-								expenseFormat === 'annual'
-									? newValue
-									: newValue * 12;
+							const annualExpenses = expenseFormat === 'annual' ? newValue : newValue * 12;
 							setAnnualExpenses(annualExpenses);
 							setAnnualSavings(annualIncome - annualExpenses);
 							if (annualIncome > 0) {
-								const newRate =
-									1 - annualExpenses / annualIncome;
+								const newRate = 1 - annualExpenses / annualIncome;
 								setSavingsRate(Math.max(0, newRate * 100));
 							}
 						}}
@@ -231,9 +211,7 @@ function SavingsRateCalculator() {
 							setAnnualSavings(value);
 							setAnnualExpenses(annualIncome - value);
 							if (annualIncome > 0) {
-								setSavingsRate(
-									Math.max(0, (value / annualIncome) * 100),
-								);
+								setSavingsRate(Math.max(0, (value / annualIncome) * 100));
 							}
 						}}
 					/>
@@ -251,19 +229,11 @@ function SavingsRateCalculator() {
 					}}
 				/>
 
-				<ExtraSpendings
-					extraSpendings={extraSpendings}
-					setExtraSpendings={setExtraSpendings}
-				/>
+				<ExtraSpendings extraSpendings={extraSpendings} setExtraSpendings={setExtraSpendings} />
 				<button
 					type="button"
 					className="button is-small mt-4"
-					onClick={() =>
-						setExtraSpendings((arr) => [
-							...arr,
-							{ value: 0, format: 'daily' },
-						])
-					}
+					onClick={() => setExtraSpendings((arr) => [...arr, { value: 0, format: 'daily' }])}
 				>
 					+
 				</button>
@@ -290,9 +260,7 @@ function SavingsRateCalculator() {
 
 			{sumExtraSpendings != 0 && (
 				<div className="has-text-info">
-					Extra Annual{' '}
-					{sumExtraSpendings > 0 ? 'Spending' : 'Savings'}: $
-					{Math.abs(round(sumExtraSpendings))}
+					Extra Annual {sumExtraSpendings > 0 ? 'Spending' : 'Savings'}: ${Math.abs(round(sumExtraSpendings))}
 				</div>
 			)}
 			{fireTarget > 0 && (
@@ -352,7 +320,7 @@ ButtonLabelToggle.propTypes = {
 	setValue: PropTypes.func.isRequired,
 	className: PropTypes.string,
 };
-export function ButtonLabelToggle({ states, value, setValue, className='' }) {
+export function ButtonLabelToggle({ states, value, setValue, className = '' }) {
 	return (
 		<button
 			className={`button is-text inline-button is-capitalized ${className}`}
