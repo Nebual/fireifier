@@ -3,6 +3,7 @@
 		"baseUrl": "./src",
 		"checkJs": true,
 		"esModuleInterop": true,
+		"downlevelIteration": true,
 		"jsx": "react"
 	}
 }

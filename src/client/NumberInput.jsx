@@ -10,34 +10,30 @@ NumberInput.propTypes = {
 	labelClassName: PropTypes.string,
 	suffix: PropTypes.node,
 	help: PropTypes.node,
+	placeholder: PropTypes.string,
 };
 export default function NumberInput({
 	value,
 	onChange,
-	className='',
+	className = '',
 	label,
 	labelClassName = '',
 	suffix = null,
 	help = null,
+	placeholder = '',
 }) {
 	return (
 		<div className={`field ${className}`}>
 			<label className={`label ${labelClassName}`}>{label}</label>
-			<p
-				className={classNames(
-					'control numeric',
-					suffix && 'has-icons-right',
-				)}
-			>
+			<p className={classNames('control numeric', suffix && 'has-icons-right')}>
 				<input
 					className="input is-small"
 					type="number"
 					value={value}
+					placeholder={placeholder}
 					onChange={(e) => onChange(e.target.value)}
 				/>
-				{suffix && (
-					<span className="icon is-small is-right">{suffix}</span>
-				)}
+				{suffix && <span className="icon is-small is-right">{suffix}</span>}
 			</p>
 			{help && <p className="help">{help}</p>}
 		</div>

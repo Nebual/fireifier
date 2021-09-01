@@ -61,24 +61,38 @@ a {
 	align-items: center;
 }
 
+.label:not(:last-child) {
+	margin-bottom: 0.25em;
+}
+.label.is-small:not(:last-child) {
+	margin-bottom: 0.125em;
+}
 
 .accordion__button {
 	margin-bottom: 0.5rem;
 }
 .accordion__button:before {
-    display: inline-block;
-    content: '';
-    height: 10px;
-    width: 10px;
-    margin-right: 12px;
-    border-bottom: 2px solid currentColor;
-    border-right: 2px solid currentColor;
-    transform: rotate(-45deg);
+	display: inline-block;
+	content: '';
+	height: 10px;
+	width: 10px;
+	margin-right: 12px;
+	border-bottom: 2px solid currentColor;
+	border-right: 2px solid currentColor;
+	transform: rotate(-45deg);
 }
 
 .accordion__button[aria-expanded='true']::before,
 .accordion__button[aria-selected='true']::before {
-    transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+
+.recharts-tooltip-item {
+	display: flex;
+}
+.recharts-tooltip-item-value {
+	margin-left: auto;
+	padding-left: 0.25rem;
 }
 
 /* From Bulma; theirs is inside a min-width(1024px) */

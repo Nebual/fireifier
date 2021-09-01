@@ -1,4 +1,3 @@
-
 export function calcFireTarget(annualExpenses, withdrawalRate) {
 	const withdrawalFloat = withdrawalRate / 100;
 	return annualExpenses / withdrawalFloat;
@@ -8,21 +7,26 @@ export function calcRetireYearsBySavings(returnRate, withdrawalRate, savingsRate
 	const savingsFloat = savingsRate / 100;
 	const withdrawalFloat = withdrawalRate / 100;
 	return (
-		Math.log(
-			1 +
-				(returnFloat * ((1 - savingsFloat) / withdrawalFloat)) /
-					savingsFloat,
-		) / Math.log(1 + returnFloat)
+		Math.log(1 + (returnFloat * ((1 - savingsFloat) / withdrawalFloat)) / savingsFloat) / //
+		Math.log(1 + returnFloat)
 	);
 }
-export function calcRetireYears(returnRate, fireTarget, annualSavings) {
+export function calcRetireYears(returnRate, fireTarget, annualSavings, principle) {
 	const returnFloat = returnRate / 100;
 	return (
-		Math.log(
-			1 +
-				(returnFloat * fireTarget) / annualSavings,
-		) / Math.log(1 + returnFloat)
+		(1 / Math.log(1 + returnFloat)) *
+		(Math.log(annualSavings + fireTarget * returnFloat) - //
+			Math.log(annualSavings + principle * returnFloat))
 	);
+}
+
+export function principleAccum(rateFloat, years) {
+	// A = P(1 + r/n)^(nt)
+	return (1 + rateFloat / 12) ** (12 * years);
+}
+export function futureValueOfSeries(rateFloat, years) {
+	// A = C((1 + r/n)^(nt) - 1) / (r/n)
+	return ((1 + rateFloat / 12) ** (12 * years) - 1) / (rateFloat / 12) / 12;
 }
 
 export function convertToAnnual(amount, oldFormat, hours = 40) {

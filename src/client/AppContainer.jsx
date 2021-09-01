@@ -14,6 +14,7 @@ import NumberInput from './NumberInput';
 import { FaCanadianMapleLeaf, FaGithub } from 'react-icons/fa';
 import { calcFireTarget, calcRetireYears, convertToAnnual, round } from './calculations';
 import ExtraSpendings from './ExtraSpendings';
+import SavingsChart from './SavingsChart';
 
 export default function AppContainer() {
 	return (
@@ -85,6 +86,8 @@ function SavingsRateCalculator() {
 	const [incomeFormat, setIncomeFormat] = useUrlState('incomeFormat', 'annual');
 	const [hours, setHours] = useUrlState('hours', 40);
 	const [hourlyIncome, setHourlyIncome] = useUrlState('income', 40000, (val) => val / (52 * hours));
+
+	const [savings, setSavings] = useUrlState('savings', 0);
 	const [annualExpenses, setAnnualExpenses] = useUrlState('expenses', 20000);
 	const [expenseFormat, setExpenseFormat] = useUrlState('expensesFormat', 'annual');
 	const [annualSavings, setAnnualSavings] = useState(() => annualIncome - annualExpenses);
@@ -99,12 +102,7 @@ function SavingsRateCalculator() {
 	const [returnRate, setReturnRate] = useUrlState('return', 5);
 	const [withdrawalRate, setWithdrawalRate] = useUrlState('withdrawal', 4);
 
-	// N = (-log(1- i * A / P)) / log (1 + i).
-	// const interest = returnRate / 100;
-	// N represents the number of payments you must make, and i is the interest rate. A is the amount owed and P is the size of each payment
-
-	// const retireInYears = (-Math.log(1 + interest * fireTarget / annualSavings)) / Math.log(1 + interest)
-	// const retireInYears = 1;
+	const [chartYears, setChartYears] = useState('');
 
 	const sumExtraSpendings = extraSpendings.reduce(
 		(a, data) => Number(a) + convertToAnnual(Number(data.value), data.format),
@@ -115,7 +113,17 @@ function SavingsRateCalculator() {
 		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
 
 	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
-	const retireInYears = calcRetireYears(returnRate, fireTarget, annualSavings);
+	const fireTargetExtraSpendings = calcFireTarget(
+		Number(annualExpenses) + Number(sumExtraSpendingsPostRe),
+		withdrawalRate,
+	);
+	const retireInYears = calcRetireYears(returnRate, fireTarget, annualSavings, savings);
+	const retireInYearsExtraSpending = calcRetireYears(
+		returnRate,
+		fireTargetExtraSpendings,
+		Number(annualSavings) - sumExtraSpendings,
+		savings,
+	);
 
 	function updateAnnualIncome(annualIncome) {
 		setAnnualIncome(annualIncome);
@@ -129,6 +137,7 @@ function SavingsRateCalculator() {
 		income: Number(annualIncome) !== 40000 && annualIncome,
 		incomeFormat: incomeFormat !== 'annual' && incomeFormat,
 		hours: Number(hours) !== 40 && hours,
+		savings: Number(savings) !== 0 && savings,
 		expenses: Number(annualExpenses) !== 20000 && annualExpenses,
 		return: Number(returnRate) !== 5 && returnRate,
 		withdrawal: Number(withdrawalRate) !== 4 && withdrawalRate,
@@ -141,6 +150,7 @@ function SavingsRateCalculator() {
 				display: 'flex',
 				flexDirection: 'column',
 				marginLeft: '1rem',
+				width: '100%',
 			}}
 		>
 			<div className="field is-flex">
@@ -247,6 +257,15 @@ function SavingsRateCalculator() {
 					+
 				</button>
 			</div>
+			<div className="field">
+				<NumberInput
+					label="Investments Balance"
+					labelClassName="is-small"
+					value={savings}
+					suffix="$"
+					onChange={setSavings}
+				/>
+			</div>
 
 			<Accordion
 				allowZeroExpanded={true}
@@ -279,6 +298,14 @@ function SavingsRateCalculator() {
 									setWithdrawalRate(newValue);
 								}}
 							/>
+							<NumberInput
+								label="Chart Years"
+								labelClassName="is-small"
+								value={chartYears}
+								suffix="Years"
+								onChange={setChartYears}
+								placeholder="auto "
+							/>
 						</div>
 					</AccordionItemPanel>
 				</AccordionItem>
@@ -295,15 +322,7 @@ function SavingsRateCalculator() {
 					{sumExtraSpendingsPostRe != 0 && (
 						<>
 							{' | '}
-							<span className="has-text-info">
-								$
-								{round(
-									calcFireTarget(
-										Number(annualExpenses) + Number(sumExtraSpendingsPostRe),
-										withdrawalRate,
-									),
-								)}
-							</span>
+							<span className="has-text-info">${round(fireTargetExtraSpendings)}</span>
 						</>
 					)}
 				</div>
@@ -315,25 +334,25 @@ function SavingsRateCalculator() {
 						{' | '}
 						<span className="has-text-info">
 							{sumExtraSpendings > 0 ? '+' : '-'}
-							{round(
-								Math.abs(
-									retireInYears -
-										calcRetireYears(
-											returnRate,
-											calcFireTarget(
-												Number(annualExpenses) + Number(sumExtraSpendingsPostRe),
-												withdrawalRate,
-											),
-											Number(annualSavings) - sumExtraSpendings,
-										),
-								),
-								1,
-							)}{' '}
-							years
+							{round(Math.abs(retireInYears - retireInYearsExtraSpending), 1)} years
 						</span>
 					</>
 				)}
 			</div>
+			<SavingsChart
+				chartYears={Number(chartYears)}
+				savings={Number(savings)}
+				returnFloat={returnRate / 100}
+				{...{
+					retireInYearsExtraSpending,
+					retireInYears,
+					annualSavings,
+					sumExtraSpendings,
+					sumExtraSpendingsPostRe,
+					fireTarget,
+					fireTargetExtraSpendings,
+				}}
+			/>
 		</div>
 	);
 }
