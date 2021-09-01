@@ -81,17 +81,23 @@ function NavbarItemLink({ href, children = '' }) {
 }
 
 function SavingsRateCalculator() {
-	const [annualIncome, setAnnualIncome] = useState(40000);
-	const [hourlyIncome, setHourlyIncome] = useState();
-	const [incomeFormat, setIncomeFormat] = useState('annual');
-	const [hours, setHours] = useState(40);
-	const [annualExpenses, setAnnualExpenses] = useState(20000);
-	const [expenseFormat, setExpenseFormat] = useState('annual');
-	const [annualSavings, setAnnualSavings] = useState(20000);
-	const [extraSpendings, setExtraSpendings] = useState([]);
-	const [savingsRate, setSavingsRate] = useState(50);
-	const [returnRate, setReturnRate] = useState(5);
-	const [withdrawalRate, setWithdrawalRate] = useState(4);
+	const [annualIncome, setAnnualIncome] = useUrlState('income', 40000);
+	const [incomeFormat, setIncomeFormat] = useUrlState('incomeFormat', 'annual');
+	const [hours, setHours] = useUrlState('hours', 40);
+	const [hourlyIncome, setHourlyIncome] = useUrlState('income', 40000, (val) => val / (52 * hours));
+	const [annualExpenses, setAnnualExpenses] = useUrlState('expenses', 20000);
+	const [expenseFormat, setExpenseFormat] = useUrlState('expensesFormat', 'annual');
+	const [annualSavings, setAnnualSavings] = useState(() => annualIncome - annualExpenses);
+	const [extraSpendings, setExtraSpendings] = useUrlState('extraSpendings', '[]', (s) => {
+		try {
+			return JSON.parse(s) || [];
+		} catch (e) {
+			return [];
+		}
+	});
+	const [savingsRate, setSavingsRate] = useState(() => round((annualSavings / annualIncome) * 100, 2));
+	const [returnRate, setReturnRate] = useUrlState('return', 5);
+	const [withdrawalRate, setWithdrawalRate] = useUrlState('withdrawal', 4);
 
 	// N = (-log(1- i * A / P)) / log (1 + i).
 	// const interest = returnRate / 100;
@@ -101,30 +107,33 @@ function SavingsRateCalculator() {
 	// const retireInYears = 1;
 
 	const sumExtraSpendings = extraSpendings.reduce(
-		(a, data) =>
-			Number(a) + convertToAnnual(Number(data.value), data.format),
+		(a, data) => Number(a) + convertToAnnual(Number(data.value), data.format),
 		0,
 	);
+	const sumExtraSpendingsPostRe = extraSpendings
+		.filter(({ preRe }) => !preRe)
+		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
 
-	const retireInYears = calcRetireYears(
-		returnRate,
-		savingsRate,
-		withdrawalRate,
-	);
 	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
+	const retireInYears = calcRetireYears(returnRate, fireTarget, annualSavings);
 
 	function updateAnnualIncome(annualIncome) {
 		setAnnualIncome(annualIncome);
 		setAnnualSavings(annualIncome - annualExpenses);
 		if (annualIncome > 0) {
-			setSavingsRate(
-				Math.max(
-					0,
-					((annualIncome - annualExpenses) / annualIncome) * 100,
-				),
-			);
+			setSavingsRate(Math.max(0, ((annualIncome - annualExpenses) / annualIncome) * 100));
 		}
 	}
+
+	useUpdateUrl({
+		income: Number(annualIncome) !== 40000 && annualIncome,
+		incomeFormat: incomeFormat !== 'annual' && incomeFormat,
+		hours: Number(hours) !== 40 && hours,
+		expenses: Number(annualExpenses) !== 20000 && annualExpenses,
+		return: Number(returnRate) !== 5 && returnRate,
+		withdrawal: Number(withdrawalRate) !== 4 && withdrawalRate,
+		extraSpendings: sumExtraSpendings !== 0 && JSON.stringify(extraSpendings),
+	});
 
 	return (
 		<div
@@ -238,25 +247,42 @@ function SavingsRateCalculator() {
 					+
 				</button>
 			</div>
-			<NumberInput
-				label="Annual return on investment"
-				labelClassName="is-small"
-				value={returnRate}
-				suffix="%"
-				onChange={(newValue) => {
-					setReturnRate(newValue);
-				}}
-				help="After subtracting inflation (eg. 2%) and fees (eg. 0.22%)"
-			/>
-			<NumberInput
-				label="Withdrawal Rate"
-				labelClassName="is-small"
-				value={withdrawalRate}
-				suffix="%"
-				onChange={(newValue) => {
-					setWithdrawalRate(newValue);
-				}}
-			/>
+
+			<Accordion
+				allowZeroExpanded={true}
+				preExpanded={Number(returnRate) !== 5 || Number(withdrawalRate) !== 4 ? ['advanced'] : []}
+			>
+				<AccordionItem uuid="advanced">
+					<AccordionItemHeading>
+						<AccordionItemButton className="accordion__button is-underlined">
+							Advanced Settings
+						</AccordionItemButton>
+					</AccordionItemHeading>
+					<AccordionItemPanel>
+						<div className="box is-inline-block">
+							<NumberInput
+								label="Annual return on investment"
+								labelClassName="is-small"
+								value={returnRate}
+								suffix="%"
+								onChange={(newValue) => {
+									setReturnRate(newValue);
+								}}
+								help="After subtracting inflation (eg. 2%) and fees (eg. 0.22%)"
+							/>
+							<NumberInput
+								label="Withdrawal Rate"
+								labelClassName="is-small"
+								value={withdrawalRate}
+								suffix="%"
+								onChange={(newValue) => {
+									setWithdrawalRate(newValue);
+								}}
+							/>
+						</div>
+					</AccordionItemPanel>
+				</AccordionItem>
+			</Accordion>
 
 			{sumExtraSpendings != 0 && (
 				<div className="has-text-info">
@@ -266,15 +292,14 @@ function SavingsRateCalculator() {
 			{fireTarget > 0 && (
 				<div>
 					Fire Target: ${fireTarget}
-					{sumExtraSpendings != 0 && (
+					{sumExtraSpendingsPostRe != 0 && (
 						<>
 							{' | '}
 							<span className="has-text-info">
 								$
 								{round(
 									calcFireTarget(
-										Number(annualExpenses) +
-											Number(sumExtraSpendings),
+										Number(annualExpenses) + Number(sumExtraSpendingsPostRe),
 										withdrawalRate,
 									),
 								)}
@@ -295,12 +320,11 @@ function SavingsRateCalculator() {
 									retireInYears -
 										calcRetireYears(
 											returnRate,
-											(1 -
-												(Number(annualExpenses) +
-													sumExtraSpendings) /
-													Number(annualIncome)) *
-												100,
-											withdrawalRate,
+											calcFireTarget(
+												Number(annualExpenses) + Number(sumExtraSpendingsPostRe),
+												withdrawalRate,
+											),
+											Number(annualSavings) - sumExtraSpendings,
 										),
 								),
 								1,

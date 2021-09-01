@@ -94,13 +94,23 @@ export function useMemoObject(newState) {
 	}
 }
 
+export function stripEmptyParams(filterParams) {
+	return Object.keys(filterParams).reduce(
+		(result, key) =>
+			filterParams[key]
+				? { ...result, [key]: filterParams[key] }
+				: result,
+		{}
+	);
+}
+
 /**
  * Updates the current URL with specified query parameters, with history support, whenever they deeply change
  */
 export function useUpdateUrl(urlParameters) {
-	const cachedParameters = useMemoObject(urlParameters);
+	const cachedParameters = useMemoObject(stripEmptyParams(urlParameters));
 	useEffectAfterInit(() => {
-		const query = queryString.stringify(urlParameters);
+		const query = queryString.stringify(cachedParameters);
 
 		history.replaceState(
 			{ query },
@@ -108,6 +118,28 @@ export function useUpdateUrl(urlParameters) {
 			`${location.pathname}?${query}`,
 		);
 	}, [cachedParameters]);
+}
+
+export function useUrlState(paramId, def, transformer) {
+	return useState(() => {
+		const query = queryString.parse(location.search, {
+			arrayFormat: 'bracket',
+		});
+
+		const value = query[paramId] || def || '';
+		if (transformer) {
+			return transformer(value, def);
+		}
+		if (value.map) {
+			return value.map((elem) =>
+				elem !== '' && !isNaN(Number(elem)) ? Number(elem) : elem
+			);
+		} else if (def && def.map) {
+			// expecting an array, so convert passed single value into array
+			return [value];
+		}
+		return value;
+	});
 }
 
 export function useLocalStorage(key, defaultValue = undefined) {
