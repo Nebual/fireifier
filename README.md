@@ -1,11 +1,11 @@
-# nmoney
+# fireifier
 A collection of personal finance calculators, themed around Financial Independence & Retiring Early
 
 
 ## How to use?
 - Run `yarn && yarn start`
 - Or `yarn build` and open `dist/index.html` in your browser
-- https://gman.nebtown.info/money/
+- https://fireifer.nebtown.info
 
 ## Todo
 - Add general description, what is this, what is fire, how does this work, what are the assumptions (eg. vgro)

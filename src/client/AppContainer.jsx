@@ -22,7 +22,7 @@ export default function AppContainer() {
 			<nav className="navbar is-spaced is-block-touch">
 				<div className="navbar-brand">
 					<div className="navbar-item">
-						<h1 className="title is-4">Neb&apos;s FIRE Calculator</h1>
+						<h1 className="title is-4">Fireifier</h1>
 					</div>
 				</div>
 				<div className="navbar-item has-dropdown is-hoverable">
@@ -44,6 +44,9 @@ export default function AppContainer() {
 						<NavbarItemLink href="http://mustachecalc.com/#/calcs/savings-from-not-spending">
 							Savings from not Spending
 						</NavbarItemLink>
+						<NavbarItemLink href="https://www.cfiresim.com">
+							cFireSim: investment portfolio simulator
+						</NavbarItemLink>
 						<hr className="navbar-divider" />
 						<NavbarItemLink href="https://www.ratehub.ca/mortgage-payment-calculator">
 							Mortgage Payment, rates <FaCanadianMapleLeaf className="ml-1" />
@@ -55,7 +58,7 @@ export default function AppContainer() {
 						<hr className="navbar-divider" />
 						<a
 							className="navbar-item"
-							href="https://github.com/Nebual/money"
+							href="https://github.com/Nebual/fireifier"
 							target="_blank"
 							rel="noreferrer"
 						>

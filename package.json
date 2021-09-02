@@ -1,7 +1,7 @@
 {
-	"name": "nmoney",
+	"name": "fireifier",
 	"version": "0.1.0",
-	"repository": "git@github.com:nebual/nmoney.git",
+	"repository": "git@github.com:nebual/fireifier.git",
 	"author": "Nebual <ben1120@gmail.com>",
 	"license": "MIT",
 	"main": "src/server/index.js",
