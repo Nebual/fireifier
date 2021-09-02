@@ -1,8 +1,10 @@
 // @ts-nocheck
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'class-names';
 
 import NumberInput from './NumberInput';
+import { FaEye, FaEyeSlash, FaTrashAlt } from 'react-icons/fa';
 
 import { ButtonLabelToggle } from './AppContainer';
 import { convertToAnnual, convertToInterval, round } from './calculations';
@@ -13,10 +15,11 @@ ExtraSpendings.propTypes = {
 };
 
 export default function ExtraSpendings({ extraSpendings, setExtraSpendings }) {
-	return extraSpendings.map(({ value, format }, i) => (
+	return extraSpendings.map(({ value, format, disabled }, i) => (
 		<NumberInput
 			key={`extraSpending${i}`}
 			className="mr-4"
+			inputClassName={classNames(disabled && 'has-text-grey-light')}
 			label={
 				<>
 					Extra
@@ -45,13 +48,26 @@ export default function ExtraSpendings({ extraSpendings, setExtraSpendings }) {
 				modified[i].value = newValue;
 				setExtraSpendings(modified);
 			}}
+			prefix={
+				<button
+					type="button"
+					className="button is-clickable is-small px-1"
+					onClick={() => {
+						const modified = [...extraSpendings];
+						modified[i].disabled = !extraSpendings[i].disabled;
+						setExtraSpendings(modified);
+					}}
+				>
+					{disabled ? <FaEyeSlash/> : <FaEye/>}
+				</button>
+			}
 			suffix={
 				<button
 					type="button"
-					className="button is-clickable is-small ml-4 is-danger"
+					className="button is-clickable is-small px-1 is-danger"
 					onClick={() => setExtraSpendings((arr) => arr.filter((_, i2) => i2 !== i))}
 				>
-					X
+					<FaTrashAlt/>
 				</button>
 			}
 			help={

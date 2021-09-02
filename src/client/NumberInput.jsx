@@ -8,6 +8,8 @@ NumberInput.propTypes = {
 	className: PropTypes.string,
 	label: PropTypes.node.isRequired,
 	labelClassName: PropTypes.string,
+	inputClassName: PropTypes.string,
+	prefix: PropTypes.node,
 	suffix: PropTypes.node,
 	help: PropTypes.node,
 	placeholder: PropTypes.string,
@@ -18,6 +20,8 @@ export default function NumberInput({
 	className = '',
 	label,
 	labelClassName = '',
+	inputClassName = '',
+	prefix = null,
 	suffix = null,
 	help = null,
 	placeholder = '',
@@ -25,9 +29,10 @@ export default function NumberInput({
 	return (
 		<div className={`field ${className}`}>
 			<label className={`label ${labelClassName}`}>{label}</label>
-			<p className={classNames('control numeric', suffix && 'has-icons-right')}>
+			<p className={classNames('control numeric', suffix && 'has-icons-right', prefix && 'has-icons-left')}>
+				{prefix && <span className="icon is-small is-left">{prefix}</span>}
 				<input
-					className="input is-small"
+					className={`input is-small ${inputClassName}`}
 					type="number"
 					value={value}
 					placeholder={placeholder}

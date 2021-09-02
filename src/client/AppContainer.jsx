@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'class-names';
 import {
@@ -14,7 +14,7 @@ import NumberInput from './NumberInput';
 import { FaCanadianMapleLeaf, FaGithub } from 'react-icons/fa';
 import { calcFireTarget, calcRetireYears, convertToAnnual, round } from './calculations';
 import ExtraSpendings from './ExtraSpendings';
-import SavingsChart from './SavingsChart';
+const SavingsChart = React.lazy(() => import('./SavingsChart'));
 
 export default function AppContainer() {
 	return (
@@ -104,12 +104,11 @@ function SavingsRateCalculator() {
 
 	const [chartYears, setChartYears] = useState('');
 
-	const sumExtraSpendings = extraSpendings.reduce(
-		(a, data) => Number(a) + convertToAnnual(Number(data.value), data.format),
-		0,
-	);
+	const sumExtraSpendings = extraSpendings
+		.filter(({ disabled }) => !disabled)
+		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
 	const sumExtraSpendingsPostRe = extraSpendings
-		.filter(({ preRe }) => !preRe)
+		.filter(({ preRe, disabled }) => !preRe && !disabled)
 		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
 
 	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
@@ -183,12 +182,12 @@ function SavingsRateCalculator() {
 				{incomeFormat === 'hourly' && (
 					<NumberInput
 						className="ml-4"
-						label="Hours"
+						label="Hours/week"
 						value={hours}
 						onChange={(newValue) => {
 							setHours(newValue);
 							if (newValue > 0 && hourlyIncome > 0) {
-								updateAnnualIncome(hourlyIncome * (52 * hours));
+								updateAnnualIncome(hourlyIncome * (52 * newValue));
 							}
 						}}
 					/>
@@ -339,20 +338,22 @@ function SavingsRateCalculator() {
 					</>
 				)}
 			</div>
-			<SavingsChart
-				chartYears={Number(chartYears)}
-				savings={Number(savings)}
-				returnFloat={returnRate / 100}
-				{...{
-					retireInYearsExtraSpending,
-					retireInYears,
-					annualSavings,
-					sumExtraSpendings,
-					sumExtraSpendingsPostRe,
-					fireTarget,
-					fireTargetExtraSpendings,
-				}}
-			/>
+			<Suspense fallback={<div>Loading graph...</div>}>
+				<SavingsChart
+					chartYears={Number(chartYears)}
+					savings={Number(savings)}
+					returnFloat={returnRate / 100}
+					{...{
+						retireInYearsExtraSpending,
+						retireInYears,
+						annualSavings,
+						sumExtraSpendings,
+						sumExtraSpendingsPostRe,
+						fireTarget,
+						fireTargetExtraSpendings,
+					}}
+				/>
+			</Suspense>
 		</div>
 	);
 }

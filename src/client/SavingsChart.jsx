@@ -175,6 +175,9 @@ export default function SavingsChart({
 }
 
 function calcGraphYears(retireInYears) {
+	if (retireInYears > 50) {
+		return 50;
+	}
 	if (retireInYears > 20) {
 		return Math.ceil(retireInYears);
 	}
