@@ -32,6 +32,7 @@ SavingsChart.propTypes = {
 	savings: PropTypes.number,
 	sumExtraSpendings: PropTypes.number,
 	sumExtraSpendingsPostRe: PropTypes.number,
+	sumExtraSpendingsOnce: PropTypes.number,
 };
 
 export default function SavingsChart({
@@ -43,6 +44,7 @@ export default function SavingsChart({
 	annualSavings,
 	sumExtraSpendings,
 	sumExtraSpendingsPostRe,
+	sumExtraSpendingsOnce,
 	fireTarget,
 	fireTargetExtraSpendings,
 }) {
@@ -119,8 +121,11 @@ export default function SavingsChart({
 						const year = i + 1;
 						const cumulativeGainFloat = futureValueOfSeries(returnFloat, year);
 						const saved = Number(savings) + annualSavings * year;
-						const savedLess = sumExtraSpendings * year;
-						const returnsLess = sumExtraSpendings * cumulativeGainFloat - savedLess;
+						const savedLess = sumExtraSpendingsOnce + sumExtraSpendings * year;
+						const returnsLess =
+							sumExtraSpendings * cumulativeGainFloat +
+							sumExtraSpendingsOnce * principleAccum(returnFloat, year) -
+							savedLess;
 						return {
 							name: `${year}`,
 							saved: saved - Math.max(0, savedLess),

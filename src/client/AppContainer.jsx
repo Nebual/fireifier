@@ -11,9 +11,11 @@ import {
 
 import { useUpdateUrl, useUrlState } from './hooks';
 import NumberInput from './NumberInput';
-import { FaCanadianMapleLeaf, FaGithub } from 'react-icons/fa';
-import { calcFireTarget, calcRetireYears, convertToAnnual, round } from './calculations';
+import { FaCanadianMapleLeaf, FaGithub, FaCar, FaBicycle } from 'react-icons/fa';
+import { calcFireTarget, calcRetireYears, convertToAnnual, principleAccum, round } from './calculations';
 import ExtraSpendings from './ExtraSpendings';
+import CarSpendings from './CarSpendings';
+import BikeSpendings from './BikeSpendings';
 const SavingsChart = React.lazy(() => import('./SavingsChart'));
 
 export default function AppContainer() {
@@ -104,15 +106,23 @@ function SavingsRateCalculator() {
 	const [savingsRate, setSavingsRate] = useState(() => round((annualSavings / annualIncome) * 100, 2));
 	const [returnRate, setReturnRate] = useUrlState('return', 5);
 	const [withdrawalRate, setWithdrawalRate] = useUrlState('withdrawal', 4);
+	const [showCar, setShowCar] = useUrlState('showCar', false);
+	const [showBike, setShowBike] = useUrlState('showBike', false);
 
 	const [chartYears, setChartYears] = useState('');
 
-	const sumExtraSpendings = extraSpendings
-		.filter(({ disabled }) => !disabled)
+	const extraSpendingsForCalcs = extraSpendings.filter(
+		({ disabled, car, bike }) => !disabled && (showCar || !car) && (showBike || !bike),
+	);
+	const sumExtraSpendings = extraSpendingsForCalcs
+		.filter(({ format }) => format !== 'once')
 		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
-	const sumExtraSpendingsPostRe = extraSpendings
-		.filter(({ preRe, disabled }) => !preRe && !disabled)
+	const sumExtraSpendingsPostRe = extraSpendingsForCalcs
+		.filter(({ preRe, format }) => !preRe && format !== 'once')
 		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
+	const sumExtraSpendingsOnce = extraSpendingsForCalcs
+		.filter(({ format }) => format === 'once')
+		.reduce((a, data) => Number(a) + Number(data.value), 0);
 
 	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
 	const fireTargetExtraSpendings = calcFireTarget(
@@ -124,8 +134,11 @@ function SavingsRateCalculator() {
 		returnRate,
 		fireTargetExtraSpendings,
 		Number(annualSavings) - sumExtraSpendings,
-		savings,
+		savings - sumExtraSpendingsOnce,
 	);
+	const cumulativeTotalSpendings =
+		sumExtraSpendings * retireInYearsExtraSpending +
+		sumExtraSpendingsOnce * principleAccum(returnRate / 100, retireInYearsExtraSpending);
 
 	function updateAnnualIncome(annualIncome) {
 		setAnnualIncome(annualIncome);
@@ -144,6 +157,8 @@ function SavingsRateCalculator() {
 		return: Number(returnRate) !== 5 && returnRate,
 		withdrawal: Number(withdrawalRate) !== 4 && withdrawalRate,
 		extraSpendings: sumExtraSpendings !== 0 && JSON.stringify(extraSpendings),
+		showCar: showCar && 1,
+		showBike: showBike && 1,
 	});
 
 	return (
@@ -180,7 +195,19 @@ function SavingsRateCalculator() {
 						updateAnnualIncome(annualIncome);
 					}}
 					suffix="$"
-					help="After tax (+ RRSP contributions)"
+					help={
+						<>
+							<a
+								className="is-underlined"
+								href="https://www.wealthsimple.com/en-ca/tool/tax-calculator"
+								target="_blank"
+								rel="noreferrer"
+							>
+								After tax
+							</a>{' '}
+							(with RRSP contributions)
+						</>
+					}
 				/>
 				{incomeFormat === 'hourly' && (
 					<NumberInput
@@ -254,11 +281,27 @@ function SavingsRateCalculator() {
 				<button
 					type="button"
 					className="button is-small mt-4"
-					onClick={() => setExtraSpendings((arr) => [...arr, { value: 0, format: 'daily' }])}
+					onClick={() => setExtraSpendings((arr) => [...arr, { value: 0, format: 'monthly' }])}
 				>
 					+
 				</button>
+				<button
+					type="button"
+					className={classNames('button is-small mx-1 mt-4', showCar && 'is-success')}
+					onClick={() => setShowCar((s) => !s)}
+				>
+					<FaCar />
+				</button>
+				<button
+					type="button"
+					className={classNames('button is-small mt-4', showBike && 'is-success')}
+					onClick={() => setShowBike((s) => !s)}
+				>
+					<FaBicycle />
+				</button>
 			</div>
+			{showCar && <CarSpendings extraSpendings={extraSpendings} setExtraSpendings={setExtraSpendings} />}
+			{showBike && <BikeSpendings extraSpendings={extraSpendings} setExtraSpendings={setExtraSpendings} />}
 			<div className="field">
 				<NumberInput
 					label="Investments Balance"
@@ -316,6 +359,8 @@ function SavingsRateCalculator() {
 			{sumExtraSpendings != 0 && (
 				<div className="has-text-info">
 					Extra Annual {sumExtraSpendings > 0 ? 'Spending' : 'Savings'}: ${Math.abs(round(sumExtraSpendings))}
+					&nbsp;(Total: ${Math.abs(round(cumulativeTotalSpendings, 0))}
+					{cumulativeTotalSpendings > 0 ? '' : ' Savings'})
 				</div>
 			)}
 			{fireTarget > 0 && (
@@ -352,6 +397,7 @@ function SavingsRateCalculator() {
 						annualSavings,
 						sumExtraSpendings,
 						sumExtraSpendingsPostRe,
+						sumExtraSpendingsOnce,
 						fireTarget,
 						fireTargetExtraSpendings,
 					}}

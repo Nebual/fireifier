@@ -53,6 +53,15 @@ a {
 	-moz-appearance: textfield; /* Firefox */
 }
 
+.input--right-3-5 {
+	input {
+		padding-right: 3.5rem !important;
+	}
+	span {
+		width: 3.5rem !important;
+	}
+}
+
 .inline-button {
 	padding-top: 0;
 	padding-bottom: 0;

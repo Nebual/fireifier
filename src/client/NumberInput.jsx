@@ -12,6 +12,7 @@ NumberInput.propTypes = {
 	prefix: PropTypes.node,
 	suffix: PropTypes.node,
 	help: PropTypes.node,
+	title: PropTypes.string,
 	placeholder: PropTypes.string,
 };
 export default function NumberInput({
@@ -24,6 +25,7 @@ export default function NumberInput({
 	prefix = null,
 	suffix = null,
 	help = null,
+	title = null,
 	placeholder = '',
 }) {
 	return (
@@ -36,6 +38,7 @@ export default function NumberInput({
 					type="number"
 					value={value}
 					placeholder={placeholder}
+					title={title}
 					onChange={(e) => onChange(e.target.value)}
 				/>
 				{suffix && <span className="icon is-small is-right">{suffix}</span>}
