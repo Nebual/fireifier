@@ -3783,6 +3783,11 @@ json5@^2.1.2:
   dependencies:
     minimist "^1.2.5"
 
+jsoncrush@^1.1.6:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/jsoncrush/-/jsoncrush-1.1.6.tgz#37efda77124746fd6e1e0a0e8692dbd0b79272a6"
+  integrity sha512-oLNi8zgT872yK7BBNM9r2Q3BAUf8Uuq+fbP0KZU5GISA87thlzHRqWkk3FcetUmMeW7MrPNLPtpZ0h/AZFFrNw==
+
 "jsx-ast-utils@^2.4.1 || ^3.0.0", jsx-ast-utils@^3.1.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/jsx-ast-utils/-/jsx-ast-utils-3.2.0.tgz#41108d2cec408c3453c1bbe8a4aae9e1e2bd8f82"

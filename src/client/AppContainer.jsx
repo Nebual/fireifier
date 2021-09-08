@@ -8,6 +8,7 @@ import {
 	AccordionItemButton,
 	AccordionItemPanel,
 } from 'react-accessible-accordion';
+import JSONCrush from 'jsoncrush';
 
 import { useUpdateUrl, useUrlState } from './hooks';
 import NumberInput from './NumberInput';
@@ -98,7 +99,7 @@ function SavingsRateCalculator() {
 	const [annualSavings, setAnnualSavings] = useState(() => annualIncome - annualExpenses);
 	const [extraSpendings, setExtraSpendings] = useUrlState('extraSpendings', '[]', (s) => {
 		try {
-			return JSON.parse(s) || [];
+			return JSON.parse(JSONCrush.uncrush(s)) || [];
 		} catch (e) {
 			return [];
 		}
@@ -156,11 +157,14 @@ function SavingsRateCalculator() {
 		expenses: Number(annualExpenses) !== 20000 && annualExpenses,
 		return: Number(returnRate) !== 5 && returnRate,
 		withdrawal: Number(withdrawalRate) !== 4 && withdrawalRate,
-		extraSpendings: sumExtraSpendings !== 0 && JSON.stringify(extraSpendings),
 		showCar: showCar && 1,
 		showBike: showBike && 1,
+		extraSpendings:
+			sumExtraSpendings !== 0 &&
+			JSONCrush.crush(
+				JSON.stringify(extraSpendings.filter(({ car, bike }) => (!car || showCar) && (!bike || showBike))),
+			),
 	});
-
 	return (
 		<div
 			style={{
