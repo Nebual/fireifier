@@ -24,7 +24,7 @@ export default function NumberInput({
 	label,
 	labelClassName = '',
 	inputClassName = '',
-	helpClassName ='',
+	helpClassName = '',
 	prefix = null,
 	suffix = null,
 	help = null,
@@ -33,7 +33,9 @@ export default function NumberInput({
 }) {
 	return (
 		<div className={`field ${className}`}>
-			<label className={`${labelClassName}`}>{label}</label>
+			<label className={`${labelClassName}`} title={title}>
+				{label}
+			</label>
 			<p className={classNames('control numeric', suffix && 'has-icons-right', prefix && 'has-icons-left')}>
 				{prefix && <span className="icon is-small is-left">{prefix}</span>}
 				<input

@@ -211,7 +211,7 @@ export default function SavingsChart({
 			)}
 			{fireTarget > 0 && (
 				<div>
-					Fire Target: ${fireTarget.toLocaleString()}
+					<span title={`Once you have this target invested, you'll be able to withdraw $${(fireTarget * withdrawalRate/100).toLocaleString()} per year throughout your retirement.`}>Fire Target: ${fireTarget.toLocaleString()}</span>
 					{sumExtraSpendingsPostRe != 0 && (
 						<>
 							{' | '}

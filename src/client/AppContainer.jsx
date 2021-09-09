@@ -18,6 +18,7 @@ import ButtonLabelToggle from './ButtonLabelToggle';
 import ExtraSpendings from './ExtraSpendings';
 import CarSpendings from './CarSpendings';
 import BikeSpendings from './BikeSpendings';
+import FAQ from './FAQ';
 const SavingsChart = React.lazy(() => import('./SavingsChart'));
 
 export default function AppContainer() {
@@ -26,7 +27,12 @@ export default function AppContainer() {
 			<nav className="navbar is-spaced">
 				<div className="navbar-brand">
 					<div className="navbar-item">
-						<h1 className="title is-4">Fireifier</h1>
+						<h1
+							className="title is-4"
+							title="FIRE: The path of becoming Financially Independant and Retiring Early"
+						>
+							Fireifier
+						</h1>
 					</div>
 				</div>
 				<div className="navbar-item has-dropdown is-hoverable">
@@ -50,6 +56,9 @@ export default function AppContainer() {
 						</NavbarItemLink>
 						<NavbarItemLink href="https://www.cfiresim.com">
 							cFireSim: investment portfolio simulator
+						</NavbarItemLink>
+						<NavbarItemLink href="https://www.wealthsimple.com/en-ca/tool/tax-calculator">
+							Income Tax Calculator <FaCanadianMapleLeaf className="ml-1" />
 						</NavbarItemLink>
 						<hr className="navbar-divider" />
 						<NavbarItemLink href="https://www.ratehub.ca/mortgage-payment-calculator">
@@ -106,7 +115,7 @@ function SavingsRateCalculator() {
 		}
 	});
 	const [savingsRate, setSavingsRate] = useState(() => round((annualSavings / annualIncome) * 100, 2));
-	const [returnRate, setReturnRate] = useUrlState('return', 5);
+	const [returnRate, setReturnRate] = useUrlState('return', 7);
 	const [withdrawalRate, setWithdrawalRate] = useUrlState('withdrawal', 4);
 	const [showCar, setShowCar] = useUrlState('showCar', false);
 	const [showBike, setShowBike] = useUrlState('showBike', false);
@@ -175,6 +184,7 @@ function SavingsRateCalculator() {
 						</>
 					}
 					labelClassName="is-flex is-align-items-center"
+					title="Total current income, after taxes. Include pre-tax savings accounts (RRSP, 401k, etc)"
 					value={
 						incomeFormat === 'annual' ? annualIncome : hourlyIncome || round(annualIncome / (52 * hours), 2)
 					}
@@ -229,6 +239,7 @@ function SavingsRateCalculator() {
 							</>
 						}
 						labelClassName="is-flex is-align-items-center"
+						title="Total annual expenses, which are spent outside of investments."
 						value={expenseFormat === 'annual' ? annualExpenses : Math.round(annualExpenses / 12)}
 						suffix="$"
 						onChange={(newValue) => {
@@ -244,6 +255,7 @@ function SavingsRateCalculator() {
 
 					<NumberInput
 						label="Annual Savings"
+						title="Total annual savings, which should be put into investments."
 						value={annualSavings}
 						suffix="$"
 						onChange={(value) => {
@@ -258,6 +270,7 @@ function SavingsRateCalculator() {
 				<div className="px-4">=</div>
 				<NumberInput
 					label="Savings Rate"
+					title="Savings / Income: the most significant factor in retiring early, as lowering expenses both lets you stack higher savings sooner, but also lowers your retirement expenses and thus Fire Target."
 					value={savingsRate}
 					className="mr-4"
 					suffix="%"
@@ -272,12 +285,14 @@ function SavingsRateCalculator() {
 				<button
 					type="button"
 					className="button is-small mt-4"
+					title="Add extra Spendings, or simulate more savings, for comparison with your baseline."
 					onClick={() => setExtraSpendings((arr) => [...arr, { value: 0, format: 'monthly' }])}
 				>
 					<FaPlus />
 				</button>
 				<button
 					type="button"
+					title="Simulate the impact a Car can have on Fire goals."
 					className={classNames('button is-small mx-1 mt-4', showCar && 'is-success')}
 					onClick={() => setShowCar((s) => !s)}
 				>
@@ -285,6 +300,7 @@ function SavingsRateCalculator() {
 				</button>
 				<button
 					type="button"
+					title="Simulate how little of an impact a Bike can have on Fire goals, while also being healthier and better for the environment!"
 					className={classNames('button is-small mt-4', showBike && 'is-success')}
 					onClick={() => setShowBike((s) => !s)}
 				>
@@ -297,6 +313,7 @@ function SavingsRateCalculator() {
 				<NumberInput
 					label="Investments Balance"
 					labelClassName="is-small"
+					title="Total cash and investments currently saved for retirement. Do not incldue home equity."
 					value={savings}
 					suffix="$"
 					onChange={setSavings}
@@ -318,16 +335,17 @@ function SavingsRateCalculator() {
 							<NumberInput
 								label="Annual return on investment"
 								labelClassName="is-small"
+								title="Real (before inflation) investment returns (after fees eg. 0.22%). The mean stock market return over the last 150 years was ~8.1% real return."
 								value={returnRate}
 								suffix="%"
 								onChange={(newValue) => {
 									setReturnRate(newValue);
 								}}
-								help="After subtracting inflation (eg. 2%) and fees (eg. 0.22%)"
 							/>
 							<NumberInput
 								label="Withdrawal Rate"
 								labelClassName="is-small"
+								title="% of retirement money to spend annually. 4% is commonly suggested, 3-3.5% is more conservative."
 								value={withdrawalRate}
 								suffix="%"
 								onChange={(newValue) => {
@@ -337,6 +355,7 @@ function SavingsRateCalculator() {
 							<NumberInput
 								label="Chart Years"
 								labelClassName="is-small"
+								title="Force the chart to show a fixed number of years, so it jumps around less in comparisons."
 								value={chartYears}
 								suffix="Years"
 								onChange={setChartYears}
@@ -361,6 +380,7 @@ function SavingsRateCalculator() {
 					extraSpendingSign={extraSpendingSign}
 				/>
 			</Suspense>
+			<FAQ />
 		</div>
 	);
 }
