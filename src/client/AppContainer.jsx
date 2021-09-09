@@ -380,7 +380,7 @@ function SavingsRateCalculator() {
 					extraSpendingSign={extraSpendingSign}
 				/>
 			</Suspense>
-			<FAQ />
+			<FAQ income={annualIncome} />
 		</div>
 	);
 }
