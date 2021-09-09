@@ -18,6 +18,7 @@ export default function CarSpendings({ extraSpendings, setExtraSpendings }) {
 		id: 'carPurchase',
 		value: 10000,
 		format: 'once',
+		type: 'purchase',
 		car: 1,
 	};
 	const gasCost = extraSpendings.find(({ id }) => id === 'gasCost') || {
@@ -53,6 +54,14 @@ export default function CarSpendings({ extraSpendings, setExtraSpendings }) {
 		value: 600,
 		format: 'annual',
 		car: 1,
+	};
+	const carPayment = extraSpendings.find(({ id }) => id === 'carPayment') || {
+		id: 'carPayment',
+		value: 600,
+		format: 'monthly',
+		years: 5,
+		car: 1,
+		disabled: 1,
 	};
 	const carInsurance = extraSpendings.find(({ id }) => id === 'carInsurance') || {
 		id: 'carInsurance',
@@ -95,19 +104,83 @@ export default function CarSpendings({ extraSpendings, setExtraSpendings }) {
 		<div className="field is-flex">
 			<NumberInput
 				className="mr-4"
-				label="Car Purchase"
+				labelClassName="is-flex is-align-items-center"
+				label={
+					<>
+						Car{' '}
+						<ButtonLabelToggle
+							states={['purchase', 'lease', 'loan']}
+							value={carPurchase.type || 'purchase'}
+							setValue={(newType) => {
+								setExtraSpendings((extraSpendings) => [
+									...extraSpendings.filter(
+										({ id }) => !['carPurchase', 'carMaintenance', 'carPayment'].includes(id),
+									),
+									{
+										...carPurchase,
+										type: newType,
+									},
+									{ ...carMaintenance, disabled: newType === 'lease' },
+									{ ...carPayment, disabled: newType === 'purchase' },
+								]);
+							}}
+							className="mx-1"
+						/>
+					</>
+				}
 				suffix="$"
 				value={carPurchase.value}
 				onChange={(newVal) => {
 					setExtraSpendings((extraSpendings) => [
 						...extraSpendings.filter(({ id }) => id !== 'carPurchase'),
-						{ ...carPurchase, value: Number(newVal) },
+						{
+							...carPurchase,
+							value: Number(newVal),
+						},
 					]);
 				}}
+				help={carPurchase.format !== 'once' && 'Down Payment'}
 			/>
+			{carPurchase.type !== 'purchase' && (
+				<NumberInput
+					className="mr-4"
+					label="Car Payments"
+					suffix="$/m"
+					value={carPayment.value}
+					title={
+						carPurchase.type === 'lease'
+							? 'Tesla Model 3 lease: $593/m x 4y + $5000 dp'
+							: 'Telsa Model 3 loan: $562/m x 8y + $5000 dp'
+					}
+					onChange={(newVal) => {
+						setExtraSpendings((extraSpendings) => [
+							...extraSpendings.filter(({ id }) => id !== 'carPayment'),
+							{
+								...carPayment,
+								value: Number(newVal),
+							},
+						]);
+					}}
+					help={
+						<NumberInput
+							label="For"
+							value={carPayment.years}
+							onChange={(newVal) => {
+								setExtraSpendings((extraSpendings) => [
+									...extraSpendings.filter(({ id }) => id !== 'carPayment'),
+									{ ...carPayment, years: Number(newVal) },
+								]);
+							}}
+							className="is-tiny is-inline-flex"
+							suffix="y"
+						/>
+					}
+				/>
+			)}
 			<NumberInput
 				className="mr-4"
 				label="Gas Cost"
+				title="For Electric cars, use $/L for $/kwh, and kwh/100kw"
 				suffix={
 					<ButtonLabelToggle
 						states={['$/G', '$/L']}
@@ -136,7 +209,7 @@ export default function CarSpendings({ extraSpendings, setExtraSpendings }) {
 			<NumberInput
 				className="mr-4 input--right-3-5"
 				label="Efficiency"
-				title="Expected longterm fuel efficiency (ie. https://fueleconomy.gov): 6.68 l/100km is good, 8.9 average car, 13.4 average truck"
+				title="Expected longterm fuel efficiency (ie. https://fueleconomy.gov): 6.68 l/100km is good, 8.9 average car, 13.4 average truck. Tesla Model 3: 18 kwh/100km"
 				suffix={
 					<ButtonLabelToggle
 						states={['mpg', 'l/100km']}
@@ -210,22 +283,26 @@ export default function CarSpendings({ extraSpendings, setExtraSpendings }) {
 					]);
 				}}
 			/>
-			<NumberInput
-				className="mr-4"
-				label="Maintenance"
-				suffix="$/y"
-				value={carMaintenance.value}
-				onChange={(newVal) => {
-					setExtraSpendings((extraSpendings) => [
-						...extraSpendings.filter(({ id }) => id !== 'carMaintenance'),
-						{ ...carMaintenance, value: Number(newVal) },
-					]);
-				}}
-			/>
+			{carPurchase.type !== 'lease' && (
+				<NumberInput
+					className="mr-4"
+					label="Maintenance"
+					suffix="$/y"
+					value={carMaintenance.value}
+					title="Avg: $600, new Tesla: $300"
+					onChange={(newVal) => {
+						setExtraSpendings((extraSpendings) => [
+							...extraSpendings.filter(({ id }) => id !== 'carMaintenance'),
+							{ ...carMaintenance, value: Number(newVal) },
+						]);
+					}}
+				/>
+			)}
 			<NumberInput
 				className="mr-4"
 				label="Insurance"
 				suffix="$/y"
+				title="Tesla Model 3: $3600; base $0 car: $1500"
 				value={carInsurance.value}
 				onChange={(newVal) => {
 					setExtraSpendings((extraSpendings) => [

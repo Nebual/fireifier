@@ -52,6 +52,23 @@ a {
 .numeric[type='number'] {
 	-moz-appearance: textfield; /* Firefox */
 }
+.is-tiny {
+	label {
+		display: inline-block;
+		font-size: 0.75rem;
+		margin-right: 0.25rem;
+		font-weight: initial;
+	}
+	.numeric {
+		width: 4em;
+	}
+	.numeric input {
+		height: 1.5em;
+	}
+	.is-right {
+		height: 1.5em !important;
+	}
+}
 
 .input--right-3-5 {
 	input {

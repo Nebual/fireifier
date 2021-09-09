@@ -23,31 +23,80 @@ import {
 
 SavingsChart.propTypes = {
 	annualSavings: PropTypes.number,
+	annualExpenses: PropTypes.number,
+	withdrawalRate: PropTypes.number,
 	chartYears: PropTypes.number,
-	fireTarget: PropTypes.number,
-	fireTargetExtraSpendings: PropTypes.number,
-	retireInYears: PropTypes.number,
-	retireInYearsExtraSpending: PropTypes.number,
 	returnFloat: PropTypes.number,
 	savings: PropTypes.number,
-	sumExtraSpendings: PropTypes.number,
-	sumExtraSpendingsPostRe: PropTypes.number,
 	sumExtraSpendingsOnce: PropTypes.number,
+	calcExtraSpendings: PropTypes.func,
+	extraSpendingSign: PropTypes.number,
 };
 
 export default function SavingsChart({
 	chartYears,
-	retireInYearsExtraSpending,
-	retireInYears,
 	returnFloat,
 	savings,
 	annualSavings,
-	sumExtraSpendings,
-	sumExtraSpendingsPostRe,
+	annualExpenses,
+	withdrawalRate,
 	sumExtraSpendingsOnce,
-	fireTarget,
-	fireTargetExtraSpendings,
+	calcExtraSpendings,
+	extraSpendingSign,
 }) {
+	const sumExtraSpendingsPostRe = calcExtraSpendings(50);
+
+	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
+	const fireTargetExtraSpendings = calcFireTarget(annualExpenses + Number(sumExtraSpendingsPostRe), withdrawalRate);
+	const retireInYears = calcRetireYears(returnFloat, fireTarget, annualSavings, savings);
+	let retireInYearsExtraSpending = calcRetireYears(
+		returnFloat,
+		fireTargetExtraSpendings,
+		annualSavings - calcExtraSpendings(0), // approximation for chartYears
+		savings - sumExtraSpendingsOnce,
+	);
+
+	const chartData = [];
+	chartYears = Number(chartYears) || calcGraphYears(Math.max(retireInYearsExtraSpending, retireInYears));
+	for (let year = 1; year <= chartYears; year++) {
+		const yearExtraSpendings = calcExtraSpendings(year);
+
+		const lastYear = chartData.length
+			? chartData[year - 2]
+			: {
+					savedOrig: Number(savings),
+					balanceOrig: Number(savings),
+					savedExtra: sumExtraSpendingsOnce,
+					balanceExtra: sumExtraSpendingsOnce,
+			  };
+
+		const savedOrig = lastYear.savedOrig + annualSavings;
+		const balanceOrig = lastYear.balanceOrig * principleAccum(returnFloat, 1) + annualSavings;
+		const returnsOrig = balanceOrig - savedOrig;
+
+		const savedExtra = lastYear.savedExtra + yearExtraSpendings;
+		const balanceExtra = lastYear.balanceExtra * principleAccum(returnFloat, 1) + yearExtraSpendings;
+		const returnsExtra = balanceExtra - savedExtra;
+
+		const sumYear = balanceOrig - balanceExtra;
+		const sumLastYear = (lastYear.balanceOrig - lastYear.balanceExtra)
+		if (sumYear >= fireTargetExtraSpendings && sumLastYear < fireTargetExtraSpendings) {
+			retireInYearsExtraSpending = (year - 1) + ((fireTargetExtraSpendings - sumLastYear) / (sumYear - sumLastYear));
+		}
+
+		chartData.push({
+			name: `${year}`,
+			saved: savedOrig - Math.max(0, savedExtra),
+			returns: round(returnsOrig - Math.max(0, returnsExtra), 2),
+			extraSpendings: Math.abs(balanceExtra),
+			savedOrig,
+			balanceOrig,
+			savedExtra,
+			balanceExtra,
+		});
+	}
+	const cumulativeTotalSpendings = chartData[chartYears - 1].balanceExtra
+
 	function SavingsTooltip({ active, payload, label }) {
 		if (!active) {
 			return null;
@@ -59,7 +108,7 @@ export default function SavingsChart({
 				<span className="recharts-tooltip-item-value ml-auto">
 					$
 					{round(
-						payload[0].value + payload[1].value + (sumExtraSpendings >= 0 ? 0 : payload[2].value),
+						payload[0].value + payload[1].value + (extraSpendingSign >= 0 ? 0 : payload[2].value),
 						-1,
 					).toLocaleString()}
 				</span>
@@ -91,11 +140,11 @@ export default function SavingsChart({
 							${round(payload[1].value, -1).toLocaleString()}
 						</span>
 					</li>
-					{sumExtraSpendings >= 0 && total}
-					{sumExtraSpendings !== 0 && (
+					{extraSpendingSign >= 0 && total}
+					{extraSpendingSign !== 0 && (
 						<li className="recharts-tooltip-item" style={{ color: payload[2].fill }}>
 							<span className="recharts-tooltip-item-name">
-								Extra {sumExtraSpendings >= 0 ? 'Spendings' : 'Savings'}
+								Extra {extraSpendingSign >= 0 ? 'Spendings' : 'Savings'}
 							</span>
 							<span className="recharts-tooltip-item-separator">: </span>
 							<span className="recharts-tooltip-item-value ml-auto">
@@ -103,44 +152,16 @@ export default function SavingsChart({
 							</span>
 						</li>
 					)}
-					{sumExtraSpendings < 0 && total}
+					{extraSpendingSign < 0 && total}
 				</ul>
 			</div>
 		);
 	}
 
-	return (
+	const chartRendered = (
 		<div style={{ width: '100%', maxWidth: 800, height: 350, marginBottom: '1rem' }}>
 			<ResponsiveContainer>
-				<AreaChart
-					data={[
-						...Array(
-							Number(chartYears) || calcGraphYears(Math.max(retireInYearsExtraSpending, retireInYears)),
-						).keys(),
-					].map((i) => {
-						const year = i + 1;
-						const cumulativeGainFloat = futureValueOfSeries(returnFloat, year);
-						const saved = Number(savings) + annualSavings * year;
-						const savedLess = sumExtraSpendingsOnce + sumExtraSpendings * year;
-						const returnsLess =
-							sumExtraSpendings * cumulativeGainFloat +
-							sumExtraSpendingsOnce * principleAccum(returnFloat, year) -
-							savedLess;
-						return {
-							name: `${year}`,
-							saved: saved - Math.max(0, savedLess),
-							returns: round(
-								Number(savings) * principleAccum(returnFloat, year) +
-									annualSavings * cumulativeGainFloat -
-									saved -
-									Math.max(0, returnsLess),
-								2,
-							),
-							extraSpendings: Math.abs(savedLess + returnsLess),
-						};
-					})}
-					margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-				>
+				<AreaChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
 					<XAxis dataKey="name">
 						<Label value="Year" offset={-2} position="insideBottom" />
 					</XAxis>
@@ -167,15 +188,51 @@ export default function SavingsChart({
 					)}
 					<Area type="monotone" dataKey="saved" stroke="#76a9f6" fill="#76a9f6" stackId="1" />
 					<Area type="monotone" dataKey="returns" stroke="#387908" fill="#387908" stackId="1" />
-					{sumExtraSpendings > 0 && (
+					{extraSpendingSign > 0 && (
 						<Area type="monotone" dataKey="extraSpendings" stroke="#C0360C" fill="#C0360C" stackId="1" />
 					)}
-					{sumExtraSpendings < 0 && (
+					{extraSpendingSign < 0 && (
 						<Area type="monotone" dataKey="extraSpendings" stroke="#8ACB5A" fill="#8ACB5A" stackId="1" />
 					)}
 				</AreaChart>
 			</ResponsiveContainer>
 		</div>
+	);
+
+	return (
+		<>
+			{extraSpendingSign !== 0 && (
+				<div className="has-text-info">
+					Extra Annual {extraSpendingSign > 0 ? 'Spending' : 'Savings'}: ${Math.abs(round(calcExtraSpendings(0)))}
+					&nbsp;(Total: ${Math.abs(round(cumulativeTotalSpendings, 0))}
+					{cumulativeTotalSpendings > 0 ? '' : ' Savings'} over {chartYears}y)
+				</div>
+			)}
+			{fireTarget > 0 && (
+				<div>
+					Fire Target: ${fireTarget}
+					{sumExtraSpendingsPostRe != 0 && (
+						<>
+							{' | '}
+							<span className="has-text-info">${round(fireTargetExtraSpendings)}</span>
+						</>
+					)}
+				</div>
+			)}
+			<div>
+				Can retire in {round(retireInYears, 1)} years.
+				{extraSpendingSign !== 0 && (
+					<>
+						{' | '}
+						<span className="has-text-info">
+							{extraSpendingSign > 0 ? '+' : '-'}
+							{round(Math.abs(retireInYears - retireInYearsExtraSpending), 1)} years
+						</span>
+					</>
+				)}
+			</div>
+			{chartRendered}
+		</>
 	);
 }
 

@@ -13,7 +13,7 @@ import JSONCrush from 'jsoncrush';
 import { useUpdateUrl, useUrlState } from './hooks';
 import NumberInput from './NumberInput';
 import { FaCanadianMapleLeaf, FaGithub, FaCar, FaBicycle } from 'react-icons/fa';
-import { calcFireTarget, calcRetireYears, convertToAnnual, principleAccum, round } from './calculations';
+import { convertToAnnual, round } from './calculations';
 import ExtraSpendings from './ExtraSpendings';
 import CarSpendings from './CarSpendings';
 import BikeSpendings from './BikeSpendings';
@@ -115,31 +115,17 @@ function SavingsRateCalculator() {
 	const extraSpendingsForCalcs = extraSpendings.filter(
 		({ disabled, car, bike }) => !disabled && (showCar || !car) && (showBike || !bike),
 	);
-	const sumExtraSpendings = extraSpendingsForCalcs
-		.filter(({ format }) => format !== 'once')
-		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
-	const sumExtraSpendingsPostRe = extraSpendingsForCalcs
-		.filter(({ preRe, format }) => !preRe && format !== 'once')
-		.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
-	const sumExtraSpendingsOnce = extraSpendingsForCalcs
-		.filter(({ format }) => format === 'once')
-		.reduce((a, data) => Number(a) + Number(data.value), 0);
-
-	const fireTarget = calcFireTarget(annualExpenses, withdrawalRate);
-	const fireTargetExtraSpendings = calcFireTarget(
-		Number(annualExpenses) + Number(sumExtraSpendingsPostRe),
-		withdrawalRate,
-	);
-	const retireInYears = calcRetireYears(returnRate, fireTarget, annualSavings, savings);
-	const retireInYearsExtraSpending = calcRetireYears(
-		returnRate,
-		fireTargetExtraSpendings,
-		Number(annualSavings) - sumExtraSpendings,
-		savings - sumExtraSpendingsOnce,
-	);
-	const cumulativeTotalSpendings =
-		sumExtraSpendings * retireInYearsExtraSpending +
-		sumExtraSpendingsOnce * principleAccum(returnRate / 100, retireInYearsExtraSpending);
+	function calcExtraSpendings(year) {
+		return extraSpendingsForCalcs
+			.filter(
+				({ format, years, preRe }) =>
+					format !== 'once' && //
+					(!years || year <= years) && //
+					(!preRe || year < 50),
+			)
+			.reduce((a, data) => Number(a) + convertToAnnual(Number(data.value), data.format), 0);
+	}
+	const extraSpendingSign = Math.sign(calcExtraSpendings(0));
 
 	function updateAnnualIncome(annualIncome) {
 		setAnnualIncome(annualIncome);
@@ -160,7 +146,7 @@ function SavingsRateCalculator() {
 		showCar: showCar && 1,
 		showBike: showBike && 1,
 		extraSpendings:
-			sumExtraSpendings !== 0 &&
+			extraSpendingSign !== 0 &&
 			JSONCrush.crush(
 				JSON.stringify(extraSpendings.filter(({ car, bike }) => (!car || showCar) && (!bike || showBike))),
 			),
@@ -359,52 +345,19 @@ function SavingsRateCalculator() {
 					</AccordionItemPanel>
 				</AccordionItem>
 			</Accordion>
-
-			{sumExtraSpendings != 0 && (
-				<div className="has-text-info">
-					Extra Annual {sumExtraSpendings > 0 ? 'Spending' : 'Savings'}: ${Math.abs(round(sumExtraSpendings))}
-					&nbsp;(Total: ${Math.abs(round(cumulativeTotalSpendings, 0))}
-					{cumulativeTotalSpendings > 0 ? '' : ' Savings'})
-				</div>
-			)}
-			{fireTarget > 0 && (
-				<div>
-					Fire Target: ${fireTarget}
-					{sumExtraSpendingsPostRe != 0 && (
-						<>
-							{' | '}
-							<span className="has-text-info">${round(fireTargetExtraSpendings)}</span>
-						</>
-					)}
-				</div>
-			)}
-			<div>
-				Can retire in {round(retireInYears, 1)} years.
-				{sumExtraSpendings != 0 && (
-					<>
-						{' | '}
-						<span className="has-text-info">
-							{sumExtraSpendings > 0 ? '+' : '-'}
-							{round(Math.abs(retireInYears - retireInYearsExtraSpending), 1)} years
-						</span>
-					</>
-				)}
-			</div>
 			<Suspense fallback={<div>Loading graph...</div>}>
 				<SavingsChart
 					chartYears={Number(chartYears)}
 					savings={Number(savings)}
-					returnFloat={returnRate / 100}
-					{...{
-						retireInYearsExtraSpending,
-						retireInYears,
-						annualSavings,
-						sumExtraSpendings,
-						sumExtraSpendingsPostRe,
-						sumExtraSpendingsOnce,
-						fireTarget,
-						fireTargetExtraSpendings,
-					}}
+					annualSavings={Number(annualSavings)}
+					annualExpenses={Number(annualExpenses)}
+					withdrawalRate={Number(withdrawalRate)}
+					returnFloat={Number(returnRate) / 100}
+					sumExtraSpendingsOnce={extraSpendingsForCalcs
+						.filter(({ format }) => format === 'once')
+						.reduce((a, data) => Number(a) + Number(data.value), 0)}
+					calcExtraSpendings={calcExtraSpendings}
+					extraSpendingSign={extraSpendingSign}
 				/>
 			</Suspense>
 		</div>

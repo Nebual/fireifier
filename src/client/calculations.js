@@ -11,8 +11,7 @@ export function calcRetireYearsBySavings(returnRate, withdrawalRate, savingsRate
 		Math.log(1 + returnFloat)
 	);
 }
-export function calcRetireYears(returnRate, fireTarget, annualSavings, principle) {
-	const returnFloat = returnRate / 100;
+export function calcRetireYears(returnFloat, fireTarget, annualSavings, principle) {
 	return (
 		(1 / Math.log(1 + returnFloat)) *
 		(Math.log(annualSavings + fireTarget * returnFloat) - //
