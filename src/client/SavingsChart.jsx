@@ -79,9 +79,9 @@ export default function SavingsChart({
 		const returnsExtra = balanceExtra - savedExtra;
 
 		const sumYear = balanceOrig - balanceExtra;
-		const sumLastYear = (lastYear.balanceOrig - lastYear.balanceExtra)
+		const sumLastYear = lastYear.balanceOrig - lastYear.balanceExtra;
 		if (sumYear >= fireTargetExtraSpendings && sumLastYear < fireTargetExtraSpendings) {
-			retireInYearsExtraSpending = (year - 1) + ((fireTargetExtraSpendings - sumLastYear) / (sumYear - sumLastYear));
+			retireInYearsExtraSpending = year - 1 + (fireTargetExtraSpendings - sumLastYear) / (sumYear - sumLastYear);
 		}
 
 		chartData.push({
@@ -95,7 +95,7 @@ export default function SavingsChart({
 			balanceExtra,
 		});
 	}
-	const cumulativeTotalSpendings = chartData[chartYears - 1].balanceExtra
+	const cumulativeTotalSpendings = chartData[chartYears - 1].balanceExtra;
 
 	function SavingsTooltip({ active, payload, label }) {
 		if (!active) {
@@ -203,18 +203,21 @@ export default function SavingsChart({
 		<>
 			{extraSpendingSign !== 0 && (
 				<div className="has-text-info">
-					Extra Annual {extraSpendingSign > 0 ? 'Spending' : 'Savings'}: ${Math.abs(round(calcExtraSpendings(0)))}
-					&nbsp;(Total: ${Math.abs(round(cumulativeTotalSpendings, 0))}
+					Extra Annual {extraSpendingSign > 0 ? 'Spending' : 'Savings'}: $
+					{Math.abs(round(calcExtraSpendings(0), 0)).toLocaleString()}
+					&nbsp;(Total: ${Math.abs(round(cumulativeTotalSpendings, 0)).toLocaleString()}
 					{cumulativeTotalSpendings > 0 ? '' : ' Savings'} over {chartYears}y)
 				</div>
 			)}
 			{fireTarget > 0 && (
 				<div>
-					Fire Target: ${fireTarget}
+					Fire Target: ${fireTarget.toLocaleString()}
 					{sumExtraSpendingsPostRe != 0 && (
 						<>
 							{' | '}
-							<span className="has-text-info">${round(fireTargetExtraSpendings)}</span>
+							<span className="has-text-info">
+								${round(fireTargetExtraSpendings, 0).toLocaleString()}
+							</span>
 						</>
 					)}
 				</div>

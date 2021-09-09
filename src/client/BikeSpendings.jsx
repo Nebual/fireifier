@@ -5,7 +5,7 @@ import classNames from 'class-names';
 
 import NumberInput from './NumberInput';
 
-import { ButtonLabelToggle } from './AppContainer';
+import ButtonLabelToggle from './ButtonLabelToggle';
 import { convertToAnnual, convertToInterval, round } from './calculations';
 
 BikeSpendings.propTypes = {

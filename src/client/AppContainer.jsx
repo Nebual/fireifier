@@ -12,8 +12,9 @@ import JSONCrush from 'jsoncrush';
 
 import { useUpdateUrl, useUrlState } from './hooks';
 import NumberInput from './NumberInput';
-import { FaCanadianMapleLeaf, FaGithub, FaCar, FaBicycle } from 'react-icons/fa';
+import { FaCanadianMapleLeaf, FaGithub, FaCar, FaBicycle, FaPlus } from 'react-icons/fa';
 import { convertToAnnual, round } from './calculations';
+import ButtonLabelToggle from './ButtonLabelToggle';
 import ExtraSpendings from './ExtraSpendings';
 import CarSpendings from './CarSpendings';
 import BikeSpendings from './BikeSpendings';
@@ -22,7 +23,7 @@ const SavingsChart = React.lazy(() => import('./SavingsChart'));
 export default function AppContainer() {
 	return (
 		<>
-			<nav className="navbar is-spaced is-block-touch">
+			<nav className="navbar is-spaced">
 				<div className="navbar-brand">
 					<div className="navbar-item">
 						<h1 className="title is-4">Fireifier</h1>
@@ -273,7 +274,7 @@ function SavingsRateCalculator() {
 					className="button is-small mt-4"
 					onClick={() => setExtraSpendings((arr) => [...arr, { value: 0, format: 'monthly' }])}
 				>
-					+
+					<FaPlus />
 				</button>
 				<button
 					type="button"
@@ -361,29 +362,5 @@ function SavingsRateCalculator() {
 				/>
 			</Suspense>
 		</div>
-	);
-}
-
-ButtonLabelToggle.propTypes = {
-	states: PropTypes.arrayOf(PropTypes.string).isRequired,
-	value: PropTypes.string.isRequired,
-	setValue: PropTypes.func.isRequired,
-	className: PropTypes.string,
-};
-export function ButtonLabelToggle({ states, value, setValue, className = '' }) {
-	return (
-		<button
-			className={`button is-text inline-button is-capitalized ${className}`}
-			type="button"
-			onClick={() => {
-				let nextIndex = states.indexOf(value) + 1;
-				if (nextIndex >= states.length) {
-					nextIndex = 0;
-				}
-				setValue(states[nextIndex]);
-			}}
-		>
-			{value}
-		</button>
 	);
 }

@@ -26,6 +26,15 @@ a {
 .text-center {
 	text-align: center;
 }
+.min-height-24 {
+	min-height: 24px;
+}
+.is-light-red {
+	background-color: #fff6f6;
+}
+.is-light-green {
+	background-color: #f6fff6;
+}
 
 .timer-link {
 	font-style: italic;
@@ -108,14 +117,21 @@ a {
 	padding-left: 1.5rem;
 }
 
-.label:not(:last-child) {
+.label:not(:last-child),
+label:not(:last-child) {
 	margin-bottom: 0.25em;
 }
-.label.is-small:not(:last-child) {
+
+.label.is-small {
+	font-weight: initial;
+}
+.label.is-small:not(:last-child),
+label.is-small:not(:last-child) {
 	margin-bottom: 0.125em;
 }
 
 .accordion__button {
+	display: inline-block;
 	margin-bottom: 0.5rem;
 }
 .accordion__button:before {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'class-names';
@@ -6,7 +5,8 @@ import classNames from 'class-names';
 import NumberInput from './NumberInput';
 import { FaEye, FaEyeSlash, FaTrashAlt } from 'react-icons/fa';
 
-import { ButtonLabelToggle } from './AppContainer';
+import ButtonLabelToggle from './ButtonLabelToggle';
+import { DurationControl } from './NumberInput';
 import { convertToAnnual, convertToInterval, round } from './calculations';
 
 ExtraSpendings.propTypes = {
@@ -23,7 +23,11 @@ export default function ExtraSpendings({ extraSpendings, setExtraSpendings }) {
 			<NumberInput
 				key={`extraSpending${i}`}
 				className="mr-4"
-				inputClassName={classNames(disabled && 'has-text-grey-light')}
+				inputClassName={classNames(
+					disabled && 'has-text-grey-light',
+					!disabled && value > 0 && 'is-light-red',
+					!disabled && value < 0 && 'is-light-green',
+				)}
 				label={
 					<>
 						Extra
@@ -45,7 +49,7 @@ export default function ExtraSpendings({ extraSpendings, setExtraSpendings }) {
 						{value >= 0 ? 'Spending' : 'Savings'}
 					</>
 				}
-				labelClassName="is-small has-text-info"
+				labelClassName="label is-small has-text-info"
 				value={value}
 				onChange={(newValue) =>
 					setExtraSpendings((extraSpendings) => {
@@ -77,21 +81,16 @@ export default function ExtraSpendings({ extraSpendings, setExtraSpendings }) {
 					</button>
 				}
 				help={
-					<>
-						<label className="checkbox">
-							<input
-								type="checkbox"
-								checked={!!extraSpendings[i].preRe}
-								onChange={() => {
-									const modified = [...extraSpendings];
-									modified[i].preRe = !extraSpendings[i].preRe;
-									setExtraSpendings(modified);
-								}}
-							/>{' '}
-							only before retirement
-						</label>
-					</>
+					<DurationControl
+						extraSpending={extraSpendings[i]}
+						updateExtraSpendings={(newSpending) => {
+							const modified = [...extraSpendings];
+							modified[i] = newSpending;
+							setExtraSpendings(modified);
+						}}
+					/>
 				}
+				helpClassName="min-height-24"
 			/>
 		);
 	});
