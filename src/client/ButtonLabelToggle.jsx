@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 
 ButtonLabelToggle.propTypes = {
 	states: PropTypes.arrayOf(PropTypes.string).isRequired,
+	displayStates: PropTypes.arrayOf(PropTypes.node),
 	value: PropTypes.string.isRequired,
 	setValue: PropTypes.func.isRequired,
 	className: PropTypes.string,
 };
-export default function ButtonLabelToggle({ states, value, setValue, className = '' }) {
+export default function ButtonLabelToggle({ states, displayStates, value, setValue, className = '' }) {
 	return (
 		<button
 			className={`button is-text inline-button is-capitalized ${className}`}
@@ -20,7 +21,7 @@ export default function ButtonLabelToggle({ states, value, setValue, className =
 				setValue(states[nextIndex]);
 			}}
 		>
-			{value}
+			{displayStates ? displayStates[states.indexOf(value)] : value}
 		</button>
 	);
 }

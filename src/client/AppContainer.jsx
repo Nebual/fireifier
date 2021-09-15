@@ -10,9 +10,9 @@ import {
 } from 'react-accessible-accordion';
 import JSONCrush from 'jsoncrush';
 
-import { useUpdateUrl, useUrlState } from './hooks';
+import { useUpdateUrl, useUrlState, useLocalStorage } from './hooks';
 import NumberInput from './NumberInput';
-import { FaCanadianMapleLeaf, FaGithub, FaCar, FaBicycle, FaPlus } from 'react-icons/fa';
+import { FaCanadianMapleLeaf, FaFlagUsa, FaGithub, FaCar, FaBicycle, FaPlus } from 'react-icons/fa';
 import { convertToAnnual, round } from './calculations';
 import ButtonLabelToggle from './ButtonLabelToggle';
 import ExtraSpendings from './ExtraSpendings';
@@ -21,9 +21,16 @@ import BikeSpendings from './BikeSpendings';
 import FAQ from './FAQ';
 const SavingsChart = React.lazy(() => import('./SavingsChart'));
 
+const GlobalContext = React.createContext({ country: 'CA', canadian: true });
+export function useGlobalContext() {
+	return React.useContext(GlobalContext);
+}
+
 export default function AppContainer() {
+	const [urlCountry] = useUrlState('country', 'CA');
+	const [country, setCountry] = useLocalStorage('country', urlCountry);
 	return (
-		<>
+		<GlobalContext.Provider value={{ country, canadian: country === 'CA' }}>
 			<nav className="navbar is-spaced">
 				<div className="navbar-brand">
 					<div className="navbar-item">
@@ -57,17 +64,21 @@ export default function AppContainer() {
 						<NavbarItemLink href="https://www.cfiresim.com">
 							cFireSim: investment portfolio simulator
 						</NavbarItemLink>
-						<NavbarItemLink href="https://www.wealthsimple.com/en-ca/tool/tax-calculator">
-							Income Tax Calculator <FaCanadianMapleLeaf className="ml-1" />
-						</NavbarItemLink>
-						<hr className="navbar-divider" />
-						<NavbarItemLink href="https://www.ratehub.ca/mortgage-payment-calculator">
-							Mortgage Payment, rates <FaCanadianMapleLeaf className="ml-1" />
-						</NavbarItemLink>
-						<NavbarItemLink href="https://www.ratehub.ca/mortgage-affordability-calculator">
-							Mortgage Affordability (given income + Down Payment){' '}
-							<FaCanadianMapleLeaf className="ml-1" />
-						</NavbarItemLink>
+						{country === 'CA' && (
+							<>
+								<NavbarItemLink href="https://www.wealthsimple.com/en-ca/tool/tax-calculator">
+									Income Tax Calculator <FaCanadianMapleLeaf className="ml-1" />
+								</NavbarItemLink>
+								<hr className="navbar-divider" />
+								<NavbarItemLink href="https://www.ratehub.ca/mortgage-payment-calculator">
+									Mortgage Payment, rates <FaCanadianMapleLeaf className="ml-1" />
+								</NavbarItemLink>
+								<NavbarItemLink href="https://www.ratehub.ca/mortgage-affordability-calculator">
+									Mortgage Affordability (given income + Down Payment){' '}
+									<FaCanadianMapleLeaf className="ml-1" />
+								</NavbarItemLink>
+							</>
+						)}
 						<hr className="navbar-divider" />
 						<a
 							className="navbar-item"
@@ -79,9 +90,16 @@ export default function AppContainer() {
 						</a>
 					</div>
 				</div>
+				<ButtonLabelToggle
+					className="ml-2"
+					states={['CA', 'US']}
+					displayStates={[<FaCanadianMapleLeaf />, <FaFlagUsa />]}
+					value={country}
+					setValue={setCountry}
+				/>
 			</nav>
 			<SavingsRateCalculator />
-		</>
+		</GlobalContext.Provider>
 	);
 }
 
@@ -98,6 +116,7 @@ function NavbarItemLink({ href, children = '' }) {
 }
 
 function SavingsRateCalculator() {
+	const { canadian, country } = useGlobalContext();
 	const [annualIncome, setAnnualIncome] = useUrlState('income', 40000);
 	const [incomeFormat, setIncomeFormat] = useUrlState('incomeFormat', 'annual');
 	const [hours, setHours] = useUrlState('hours', 40);
@@ -151,7 +170,7 @@ function SavingsRateCalculator() {
 		hours: Number(hours) !== 40 && hours,
 		savings: Number(savings) !== 0 && savings,
 		expenses: Number(annualExpenses) !== 20000 && annualExpenses,
-		return: Number(returnRate) !== 5 && returnRate,
+		return: Number(returnRate) !== 7 && returnRate,
 		withdrawal: Number(withdrawalRate) !== 4 && withdrawalRate,
 		showCar: showCar && 1,
 		showBike: showBike && 1,
@@ -160,13 +179,15 @@ function SavingsRateCalculator() {
 			JSONCrush.crush(
 				JSON.stringify(extraSpendings.filter(({ car, bike }) => (!car || showCar) && (!bike || showBike))),
 			),
+		country: country !== 'CA' && country,
 	});
 	return (
 		<div
 			style={{
 				display: 'flex',
 				flexDirection: 'column',
-				marginLeft: '1rem',
+				paddingLeft: '1rem',
+				paddingRight: '0.5rem',
 				width: '100%',
 			}}
 		>
@@ -184,7 +205,9 @@ function SavingsRateCalculator() {
 						</>
 					}
 					labelClassName="is-flex is-align-items-center"
-					title="Total current income, after taxes. Include pre-tax savings accounts (RRSP, 401k, etc)"
+					title={`Total current income, after taxes. Include pre-tax savings accounts (${
+						canadian ? 'RRSP' : '401k'
+					})`}
 					value={
 						incomeFormat === 'annual' ? annualIncome : hourlyIncome || round(annualIncome / (52 * hours), 2)
 					}
@@ -200,13 +223,17 @@ function SavingsRateCalculator() {
 						<>
 							<a
 								className="is-underlined"
-								href="https://www.wealthsimple.com/en-ca/tool/tax-calculator"
+								href={
+									canadian
+										? 'https://www.wealthsimple.com/en-ca/tool/tax-calculator'
+										: 'https://smartasset.com/taxes/income-taxes'
+								}
 								target="_blank"
 								rel="noreferrer"
 							>
 								After tax
 							</a>{' '}
-							(with RRSP contributions)
+							(with {canadian ? 'RRSP' : '401k'} contributions)
 						</>
 					}
 				/>
@@ -313,7 +340,7 @@ function SavingsRateCalculator() {
 				<NumberInput
 					label="Investments Balance"
 					labelClassName="is-small"
-					title="Total cash and investments currently saved for retirement. Do not incldue home equity."
+					title="Total cash and investments currently saved for retirement. Exclude home equity."
 					value={savings}
 					suffix="$"
 					onChange={setSavings}
@@ -322,7 +349,7 @@ function SavingsRateCalculator() {
 
 			<Accordion
 				allowZeroExpanded={true}
-				preExpanded={Number(returnRate) !== 5 || Number(withdrawalRate) !== 4 ? ['advanced'] : []}
+				preExpanded={Number(returnRate) !== 7 || Number(withdrawalRate) !== 4 ? ['advanced'] : []}
 			>
 				<AccordionItem uuid="advanced">
 					<AccordionItemHeading>
