@@ -188,7 +188,7 @@ export default function FAQ({ income }) {
 						</ExternalLink>{' '}
 						(the max you can deposit) accumulates by ~5,500 every year (so a 25 year old who hasn&apos;t
 						made deposits has ~50,000 room), deposits use up that room, growth (eg. dividends, stock prices
-						going up) inside the TFSA do&apos;nt affect that room (so your TFSA balance is likely to end up
+						going up) inside the TFSA don&apos;t affect that room (so your TFSA balance is likely to end up
 						higher than your contribution room!), and withdrawals return contribution room on the next Jan
 						1st. Thus, its easier (no tax, can return/undo fairly soon) to withdraw from a TFSA when needed,
 						than to access an RRSP or other investment accounts.
