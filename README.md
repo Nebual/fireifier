@@ -12,3 +12,5 @@ A collection of personal finance calculators, themed around Financial Independen
 - Tax estimator (or link ws/calculator)?
   - RRSP/TFSA/etc vs personal (at least an explanation)
 - localStorage baseline tracking
+  - Wealthica api integration?
+- freedom days, how much currently that is a month. Defaults to $currentAmount, but adjusts when mousing over graph
