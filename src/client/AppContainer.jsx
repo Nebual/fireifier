@@ -134,7 +134,7 @@ function SavingsRateCalculator() {
 		}
 	});
 	const [savingsRate, setSavingsRate] = useState(() => round((annualSavings / annualIncome) * 100, 2));
-	const [returnRate, setReturnRate] = useUrlState('return', 7);
+	const [returnRate, setReturnRate] = useUrlState('return', 5);
 	const [withdrawalRate, setWithdrawalRate] = useUrlState('withdrawal', 4);
 	const [showCar, setShowCar] = useUrlState('showCar', false);
 	const [showBike, setShowBike] = useUrlState('showBike', false);
@@ -170,7 +170,7 @@ function SavingsRateCalculator() {
 		hours: Number(hours) !== 40 && hours,
 		savings: Number(savings) !== 0 && savings,
 		expenses: Number(annualExpenses) !== 20000 && annualExpenses,
-		return: Number(returnRate) !== 7 && returnRate,
+		return: Number(returnRate) !== 5 && returnRate,
 		withdrawal: Number(withdrawalRate) !== 4 && withdrawalRate,
 		showCar: showCar && 1,
 		showBike: showBike && 1,
@@ -349,7 +349,7 @@ function SavingsRateCalculator() {
 
 			<Accordion
 				allowZeroExpanded={true}
-				preExpanded={Number(returnRate) !== 7 || Number(withdrawalRate) !== 4 ? ['advanced'] : []}
+				preExpanded={Number(returnRate) !== 5 || Number(withdrawalRate) !== 4 ? ['advanced'] : []}
 			>
 				<AccordionItem uuid="advanced">
 					<AccordionItemHeading>
@@ -362,7 +362,7 @@ function SavingsRateCalculator() {
 							<NumberInput
 								label="Annual return on investment"
 								labelClassName="is-small"
-								title="Real (before inflation) investment returns (after fees eg. 0.22%). The mean stock market return over the last 150 years was ~8.1% real return."
+								title="Investment returns (after fees eg. 0.22%), minus inflation. The total stock market return over the last 150 years was ~7% after inflation."
 								value={returnRate}
 								suffix="%"
 								onChange={(newValue) => {
