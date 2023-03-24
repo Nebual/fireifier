@@ -56,19 +56,23 @@ export default function SavingsChart({
 		savings - sumExtraSpendingsOnce,
 	);
 
-	const chartData = [];
+	const chartData = [
+		{
+			name: '0',
+			saved: Number(savings),
+			returns: 0,
+			extraSpendings: 0,
+			savedOrig: Number(savings),
+			balanceOrig: Number(savings),
+			savedExtra: 0,
+			balanceExtra: 0,
+		},
+	];
 	chartYears = Number(chartYears) || calcGraphYears(Math.max(retireInYearsExtraSpending, retireInYears));
 	for (let year = 1; year <= chartYears; year++) {
 		const yearExtraSpendings = calcExtraSpendings(year);
 
-		const lastYear = chartData.length
-			? chartData[year - 2]
-			: {
-					savedOrig: Number(savings),
-					balanceOrig: Number(savings),
-					savedExtra: sumExtraSpendingsOnce,
-					balanceExtra: sumExtraSpendingsOnce,
-			  };
+		const lastYear = chartData[year - 1];
 
 		const savedOrig = lastYear.savedOrig + annualSavings;
 		const balanceOrig = lastYear.balanceOrig * principleAccum(returnFloat, 1) + annualSavings;
@@ -101,17 +105,12 @@ export default function SavingsChart({
 		if (!active) {
 			return null;
 		}
+		const totalAmount = payload[0].value + payload[1].value + (extraSpendingSign >= 0 ? 0 : payload[2].value);
 		const total = (
 			<li className="recharts-tooltip-item">
 				<span className="recharts-tooltip-item-name">Total</span>
 				<span className="recharts-tooltip-item-separator">: </span>
-				<span className="recharts-tooltip-item-value ml-auto">
-					$
-					{round(
-						payload[0].value + payload[1].value + (extraSpendingSign >= 0 ? 0 : payload[2].value),
-						-1,
-					).toLocaleString()}
-				</span>
+				<span className="recharts-tooltip-item-value ml-auto">${round(totalAmount, -1).toLocaleString()}</span>
 			</li>
 		);
 		return (
@@ -153,6 +152,9 @@ export default function SavingsChart({
 						</li>
 					)}
 					{extraSpendingSign < 0 && total}
+					<li className="recharts-tooltip-item">
+						Monthly passive income: ${round((totalAmount * withdrawalRate) / 1200, -1).toLocaleString()}
+					</li>
 				</ul>
 			</div>
 		);
@@ -211,7 +213,14 @@ export default function SavingsChart({
 			)}
 			{fireTarget > 0 && (
 				<div>
-					<span title={`Once you have this target invested, you'll be able to withdraw $${(fireTarget * withdrawalRate/100).toLocaleString()} per year throughout your retirement.`}>Fire Target: ${fireTarget.toLocaleString()}</span>
+					<span
+						title={`Once you have this target invested, you'll be able to withdraw $${(
+							(fireTarget * withdrawalRate) /
+							100
+						).toLocaleString()} per year throughout your retirement.`}
+					>
+						Fire Target: ${fireTarget.toLocaleString()}
+					</span>
 					{sumExtraSpendingsPostRe != 0 && (
 						<>
 							{' | '}
