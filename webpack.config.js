@@ -2,6 +2,7 @@ const path = require('path');
 const process = require('process');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const webpack = require('webpack');
 
@@ -9,7 +10,7 @@ const outputDirectory = 'dist';
 
 module.exports = (env, argv) => {
 	const isDevelopment = argv.mode !== 'production';
-	return ({
+	return {
 		entry: ['babel-polyfill', './src/client/index.js'],
 		output: {
 			path: path.join(__dirname, outputDirectory),
@@ -57,11 +58,16 @@ module.exports = (env, argv) => {
 		},
 		plugins: [
 			new CleanWebpackPlugin(),
+			new CopyPlugin({
+				patterns: [
+					{ from: 'public', to: '', globOptions: { ignore: ['**/index.html'] } }, //to the dist root directory
+				],
+			}),
 			new HtmlWebpackPlugin({
 				template: './public/index.html',
 			}),
 			isDevelopment && new webpack.HotModuleReplacementPlugin(),
 			isDevelopment && new ReactRefreshWebpackPlugin(),
 		].filter(Boolean),
-	});
+	};
 };
