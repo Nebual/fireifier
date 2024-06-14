@@ -191,7 +191,7 @@ function SavingsRateCalculator() {
 				width: '100%',
 			}}
 		>
-			<div className="field is-flex">
+			<div id="income" className="field is-flex">
 				<NumberInput
 					className="mb-0"
 					label={
@@ -206,7 +206,7 @@ function SavingsRateCalculator() {
 					}
 					labelClassName="is-flex is-align-items-center"
 					title={`Total current income, after taxes. Include pre-tax savings accounts (${
-						canadian ? 'RRSP' : '401k'
+						canadian ? 'FHSA/RRSP' : '401k'
 					})`}
 					value={
 						incomeFormat === 'annual' ? annualIncome : hourlyIncome || round(annualIncome / (52 * hours), 2)
@@ -233,7 +233,7 @@ function SavingsRateCalculator() {
 							>
 								After tax
 							</a>{' '}
-							(with {canadian ? 'RRSP' : '401k'} contributions)
+							(with {canadian ? 'FHSA/RRSP' : '401k'} contributions)
 						</>
 					}
 				/>

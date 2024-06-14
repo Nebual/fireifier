@@ -133,12 +133,20 @@ export default function FAQ({ income }) {
 						.
 					</li>
 					<li>
-						<strong>Individual stocks</strong> <small>(Apple, Amazon, Fortis, etc)</small>: generally
-						considered to be gambling unless (or even if) you&apos;re prepared to do lots of research and
-						make stock picking a day job.
+						<strong>Individual stocks</strong>: generally considered to be gambling unless (or even if)
+						you&apos;re prepared to do lots of research and make stock picking a day job. eg. Apple, Amazon,
+						Fortis
 						<br />
-						{canadian &&
-							"Can be bought on WST, but for non-Canadian stocks, you'll have lower fees on an exchange with USD accounts, such as Questrade."}
+						{canadian && (
+							<span>
+								Can be bought on{' '}
+								<ExternalLink href="https://my.wealthsimple.com/app/public/trade-referral-signup?code=2YIQEG">
+									Wealthsimple Trade
+								</ExternalLink>
+								, but for non-Canadian stocks, you&apos;ll have lower fees when using their USD
+								accounts.
+							</span>
+						)}
 					</li>
 					<li>
 						<strike>
@@ -178,22 +186,55 @@ export default function FAQ({ income }) {
 				</ol>
 			</div>
 
-			<div className={classNames('mb-2', !canadian && 'hidden')}>
-				<p className="mt-4">
+			<div className={classNames('content mb-2 mt-4', !canadian && 'hidden')}>
+				<p className="mb-1">
 					<div className="subtitle is-5 mb-1">
 						<a id="account-type" href="#account-type">
 							What Account Type do I invest with? <FaCanadianMapleLeaf />
 						</a>
 					</div>
 					When you open an investment account, you pick a Type, which affects how you get taxed on any gains
-					(interest, dividends, and capital gains from the share price going up). They&apos;re kinda
-					&apos;Money Folders&apos; (like a Paypal/Steam wallet balance), you can deposit money into (to a
-					limit), and then decide what to buy with them (stocks, ETFs, etc). Selling keeps the money in that
+					(interest, dividends, and capital gains from the share price going up). They&apos;re like
+					&apos;Money Folders&apos; (think a Paypal/Steam wallet balance), that you can deposit money into (to
+					a limit), and then decide what to buy with them (stocks, ETFs, etc). Selling keeps the money in that
 					account until you Withdraw (to your normal bank account), which may have restrictions. All these
-					tax-advantaged account types charge no income taxes on gains inside, which helps compound interest
-					grow significantly.
+					tax-advantaged account types charge no income taxes on gains inside (until withdrawal, or in some
+					cases ever), which helps compound interest grow significantly.
 				</p>
-				<ol className="pl-4">
+				<ol>
+					<li>
+						<strong>
+							<a id="fhsa" href="#fhsa">
+								FHSA
+							</a>
+						</strong>{' '}
+						<small>(First Home Savings Account)</small>: uses pre-tax dollars{' '}
+						<small>
+							(ie. you get a tax refund for contributions; it effectively lowers your taxed income).
+						</small>
+						<br />
+						The FHSA is a special RRSP-like account designed for the down payment on your first home, but if
+						you don&apos;t end up buying, it gets rolled into your RRSP (eg. its free RRSP room!).
+						Withdrawals made while buying property are tax-free, other withdrawals have to pay income tax
+						(just like an RRSP), so ideally your money is locked away until you buy or retire.
+						<br />
+						You can contribute up to $8,000 per year (up to a lifetime maximum of $40,000), and you can
+						carry forward 1 year of unused room <i>if you already opened the account</i>, so{' '}
+						<ExternalLink href="https://www.wealthsimple.com/en-ca/accounts/fhsa">
+							Open one today
+						</ExternalLink>{' '}
+						even if you don&apos;t immediately use it!
+						<br />
+						You can open a FHSA if you&apos;re 18-71, and{' '}
+						<ExternalLink href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/first-home-savings-account/opening-your-fhsas.html">
+							haven&apos;t owned a home in the last 4 years.
+						</ExternalLink>
+						{income >= 60000 && (
+							<p className="has-text-success">
+								With a high income, start lowering taxes with an FHSA/RRSP, then TFSA!
+							</p>
+						)}
+					</li>
 					<li>
 						<strong>
 							<a id="rrsp" href="#rrsp">
@@ -204,6 +245,7 @@ export default function FAQ({ income }) {
 						<small>
 							(ie. you get a tax refund for contributions; it effectively lowers your taxed income).
 						</small>
+						<br />
 						You have to pay income tax on whatever you withdraw, so if you wait until a year when you have
 						no/low other income (eg. retirement, gap year), you can benefit from the difference between
 						&lt;what tax you would&apos;ve paid when young&gt; - &lt;lower tax rate when withdrawing&gt;.
@@ -223,9 +265,9 @@ export default function FAQ({ income }) {
 						Contribution Room (the max you can deposit) increases by (Income * 0.18 = ${income * 0.18})
 						every year, unused room accumulates, but withdrawals cannot be recontributed (you don&apos;t get
 						room back).
-						{income >= 75000 && (
+						{income >= 60000 && (
 							<p className="has-text-success">
-								With a high income, start lowering taxes with an RRSP, then TFSA!
+								With a high income, start lowering taxes with an FHSA/RRSP, then TFSA!
 							</p>
 						)}
 					</li>
@@ -236,7 +278,7 @@ export default function FAQ({ income }) {
 							</a>
 						</strong>{' '}
 						<small>(Tax-Free Savings Account)</small>: uses after-tax dollars, withdraw anytime without
-						penalty! Very flexible.
+						penalty or tax! Very flexible.
 						<br />
 						<ExternalLink href="https://personalfinancecanada.ca/calculators/tfsa-contribution-room/">
 							Contribution Room
@@ -247,7 +289,7 @@ export default function FAQ({ income }) {
 						higher than your contribution room!), and withdrawals return contribution room on the next Jan
 						1st. Thus, its easier (no tax, can return/undo fairly soon) to withdraw from a TFSA when needed,
 						than to access an RRSP or other investment accounts.
-						{income < 75000 && (
+						{income < 60000 && (
 							<p className="has-text-success">
 								With a low income, start with a general purpose TFSA, then RRSP!
 							</p>
@@ -258,16 +300,69 @@ export default function FAQ({ income }) {
 						child&apos;s education. Government grants augment your contributions.
 					</li>
 					<li>
+						<strong>RDSP</strong> <small>(Registered Disability Savings Plan)</small>: Excellent matching
+						Government grants.
+						<br />
+						Eligible for people receiving the{' '}
+						<ExternalLink href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/segments/tax-credits-deductions-persons-disabilities/disability-tax-credit/eligible-dtc.html">
+							Disability Tax Credit
+						</ExternalLink>
+						.
+						<br />
+						The first $1500 deposited each year gets matched by $3500 grants (
+						<ExternalLink href="https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/registered-disability-savings-plan-rdsp/canada-disability-savings-grant-canada-disability-savings-bond.html">
+							income dependent
+						</ExternalLink>
+						), a 233% match!!
+						<br />
+						Deposits beyond the first $1500/y: uses after-tax dollars, grows tax-deferred (until
+						Withdrawal). The total lifetime contribution limit is $200,000.
+						<br />
+						Withdrawals have some tax: the portion that was your contributions are tax-free, but grant money
+						and growth are taxed as income (so ideally withdraw in low income years).
+					</li>
+					<li>
 						<strong>Non-registered account</strong> <small>(other)</small>: no tax free magic at all,
-						you&apos;ll pay income tax on any earnings, but completely flexible. &quot;Capital Gains&quot;
-						(ie. the stock&apos;s price went up and you sold, Gaining the difference between Purchase and
-						Sale price) are taxed less than normal income (approx half)
+						you&apos;ll pay{' '}
+						<ExternalLink href="https://www.wealthsimple.com/en-ca/tool/tax-calculator">
+							income tax
+						</ExternalLink>{' '}
+						on any earnings, but completely flexible.
+						<ul>
+							<li>
+								&quot;Capital Gains&quot; (ie. the stock&apos;s price went up and you sold, Gaining the
+								difference between Purchase and Sale price) are taxed less than normal income (approx
+								half)
+							</li>
+							<li>
+								&quot;Dividends&quot; (especially Canadian companies) are taxed at a lower rate than
+								normal income.
+							</li>
+						</ul>
 					</li>
 				</ol>
+
+				<div className="subtitle is-6 mb-1">
+					<a id="tldr-type" href="#tldr-type">
+						tl;dr: Which account should I use?
+					</a>
+				</div>
+				{income >= 60000 && (
+					<div>
+						With <a href="#income">${income} income</a>, prioritize: RDSP grants (if eligible), then FHSA,
+						RRSP, TFSA, and then non-registered.
+					</div>
+				)}
+				{income < 60000 && (
+					<div>
+						With <a href="#income">${income} income</a>, prioritize: RDSP grants (if eligible), then FHSA,
+						TFSA, RRSP, and then non-registered.
+					</div>
+				)}
 			</div>
 
-			<div className={classNames('mb-2')}>
-				<div className="subtitle is-5 mt-3 mb-1">
+			<div className={classNames('mb-2 mt-4')}>
+				<div className="subtitle is-5 mb-1">
 					<a id="eli5" href="#eli5">
 						Savings Rate Intro
 					</a>
@@ -290,15 +385,15 @@ export default function FAQ({ income }) {
 					<br />
 					<img className="mt-1" src="/fire_table_5_4.jpg" />
 					<h5 className="subtitle is-5 mt-2 mb-1">Example:</h5>
-					<div>BC Minimum Wage ($15.65) x 40h = $32552 (before tax) per year.</div>
+					<div>BC Minimum Wage ($17.40) x 40h = $36,192 (before tax) per year.</div>
 					<div>
 						<a href="https://www.wealthsimple.com/en-ca/tool/tax-calculator/british-columbia">After tax</a>{' '}
-						(fully utilizing RRSP contributions) = $28387 net, or $2365/m.
+						(fully utilizing $8k FHSA + 18% RRSP contributions) = $32,878 net, or $2740/m.
 					</div>
 					<div>
-						Assuming $1200 in rent/utilities, + $600 food/transit/phone/etc, thats $1800 in expenses, which
+						Assuming $1500 in rent/utilities, + $600 food/transit/phone/etc, thats $2100 in expenses, which
 						is a{' '}
-						<a href="/?expenses=21600&income=28387">
+						<a href="/?expenses=25200&income=32878">
 							<strong>24%</strong> savings rate, or being FI after 33 years (eg. age 51)
 						</a>
 						.
@@ -308,20 +403,20 @@ export default function FAQ({ income }) {
 						<ul className="pl-4">
 							<li>
 								- Minimum Wage but dropping to $600 rent ={' '}
-								<a href="/?expenses=14400&income=28387">
-									<strong>49%</strong> savings rate = FI after 17 years.
+								<a href="/?expenses=14400&income=32878">
+									<strong>56%</strong> savings rate = FI after 14 years.
 								</a>
 							</li>
 							<li>
-								- or instead getting a job paying $21/h (44k salary) with $1800 expenses ={' '}
-								<a href="/?expenses=21600&income=37037">
-									<strong>42%</strong> savings rate = FI after 21 years.
+								- or instead getting a job paying $23/h (48k salary) with $2100 expenses ={' '}
+								<a href="/?expenses=25200&income=41905">
+									<strong>40%</strong> savings rate = FI after 22 years.
 								</a>
 							</li>
 							<li>
-								- or both (41k salary, $1200 expenses) ={' '}
-								<a href="/?expenses=14400&income=37037">
-									<strong>61%</strong> savings rate = FI after 12 years.
+								- or both (48k salary, $1200 expenses) ={' '}
+								<a href="/?expenses=14400&income=41905">
+									<strong>65%</strong> savings rate = FI after 10 years.
 								</a>
 							</li>
 						</ul>

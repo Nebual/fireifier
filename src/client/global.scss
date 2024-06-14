@@ -227,3 +227,11 @@ label.is-small:not(:last-child) {
 	left: auto;
 	right: 0;
 }
+
+.content {
+	ol,
+	ul {
+		margin-left: 1.5em;
+		margin-top: 0.25rem;
+	}
+}
