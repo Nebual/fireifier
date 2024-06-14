@@ -7,10 +7,8 @@
 	"main": "src/server/index.js",
 	"scripts": {
 		"build": "webpack --mode production",
-		"server": "nodemon src/server/index.js",
 		"client": "webpack serve --mode development --devtool inline-source-map --hot",
-		"start": "concurrently \"npm run server\" \"npm run client\"",
-		"start:prod": "npm run build && node src/server/index.js"
+		"start": "npm run client"
 	},
 	"dependencies": {
 		"@creativebulma/bulma-collapsible": "^1.0.4",
