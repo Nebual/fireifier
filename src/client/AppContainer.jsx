@@ -19,6 +19,7 @@ import ExtraSpendings from './ExtraSpendings';
 import CarSpendings from './CarSpendings';
 import BikeSpendings from './BikeSpendings';
 import FAQ from './FAQ';
+import ExternalLink from './ExternalLink';
 const SavingsChart = React.lazy(() => import('./SavingsChart'));
 
 const GlobalContext = React.createContext({ country: 'CA', canadian: true });
@@ -121,6 +122,7 @@ function SavingsRateCalculator() {
 	const [incomeFormat, setIncomeFormat] = useUrlState('incomeFormat', 'annual');
 	const [hours, setHours] = useUrlState('hours', 40);
 	const [hourlyIncome, setHourlyIncome] = useUrlState('income', 40000, (val) => val / (52 * hours));
+	const [pretaxIncome, setPretaxIncome] = useUrlState('pretaxIncome', false);
 
 	const [savings, setSavings] = useUrlState('savings', 0);
 	const [annualExpenses, setAnnualExpenses] = useUrlState('expenses', 20000);
@@ -167,6 +169,7 @@ function SavingsRateCalculator() {
 	useUpdateUrl({
 		income: Number(annualIncome) !== 40000 && annualIncome,
 		incomeFormat: incomeFormat !== 'annual' && incomeFormat,
+		pretaxIncome: pretaxIncome > 0 ? pretaxIncome : null,
 		hours: Number(hours) !== 40 && hours,
 		savings: Number(savings) !== 0 && savings,
 		expenses: Number(annualExpenses) !== 20000 && annualExpenses,
@@ -192,65 +195,116 @@ function SavingsRateCalculator() {
 			}}
 		>
 			<div id="income" className="field is-flex">
+				{pretaxIncome !== false && (
+					<>
+						<NumberInput
+							className="mb-0 mr-2"
+							label={
+								<>
+									Pre-tax
+									<ButtonLabelToggle
+										className="mx-1"
+										states={['annual', 'hourly']}
+										value={incomeFormat}
+										setValue={setIncomeFormat}
+									/>{' '}
+									Income
+								</>
+							}
+							labelClassName="is-flex is-align-items-center"
+							title={`Total gross income, before taxes.`}
+							value={incomeFormat === 'annual' ? pretaxIncome : round(pretaxIncome / (52 * hours), 2)}
+							onChange={(newValue) => {
+								if (incomeFormat === 'hourly') {
+									setHourlyIncome(newValue);
+								}
+								const annualIncome = incomeFormat === 'annual' ? newValue : newValue * (52 * hours);
+								setPretaxIncome(annualIncome);
+							}}
+							suffix="$"
+							help={
+								<div style={{ width: '12rem' }}>
+									Use
+									<ExternalLink
+										className="is-underlined ml-1"
+										href={
+											canadian
+												? 'https://www.wealthsimple.com/en-ca/tool/tax-calculator'
+												: 'https://smartasset.com/taxes/income-taxes'
+										}
+									>
+										{canadian ? `Wealthsimple's` : `SmartAsset's`} Calculator
+									</ExternalLink>
+									: Enter{' '}
+									{incomeFormat === 'hourly' && (
+										<>
+											<b>{round(pretaxIncome, 0)}</b> Employ Income and <br />
+										</>
+									)}
+									{canadian ? (
+										<>
+											({round(Math.min(pretaxIncome * 0.18, 31560), 0)}+8000) ={' '}
+											<b>
+												{round(
+													Math.min(pretaxIncome, Math.min(pretaxIncome * 0.18, 31560) + 8000),
+													0,
+												)}
+											</b>{' '}
+											RRSP+FHSA
+										</>
+									) : (
+										<>
+											$<b>{round(Math.min(pretaxIncome, 23000), 0)}</b> 401(k)
+										</>
+									)}{' '}
+									Deductions to get your after tax Income
+								</div>
+							}
+						/>
+
+						{incomeFormat === 'hourly' && (
+							<NumberInput
+								className="mr-4"
+								label="Hours/week"
+								value={hours}
+								onChange={(newValue) => {
+									setHours(newValue);
+									if (newValue > 0 && hourlyIncome > 0) {
+										setPretaxIncome(hourlyIncome * (52 * newValue));
+									}
+								}}
+							/>
+						)}
+					</>
+				)}
 				<NumberInput
 					className="mb-0"
 					label={
 						<>
-							<ButtonLabelToggle
-								states={['annual', 'hourly']}
-								value={incomeFormat}
-								setValue={setIncomeFormat}
-							/>{' '}
-							Income
+							{pretaxIncome !== false && 'After tax '}
+							Annual Income
 						</>
 					}
 					labelClassName="is-flex is-align-items-center"
 					title={`Total current income, after taxes. Include pre-tax savings accounts (${
-						canadian ? 'FHSA/RRSP' : '401k'
+						canadian ? 'FHSA/RRSP' : '401(k)'
 					})`}
-					value={
-						incomeFormat === 'annual' ? annualIncome : hourlyIncome || round(annualIncome / (52 * hours), 2)
-					}
-					onChange={(newValue) => {
-						if (incomeFormat === 'hourly') {
-							setHourlyIncome(newValue);
-						}
-						const annualIncome = incomeFormat === 'annual' ? newValue : newValue * (52 * hours);
-						updateAnnualIncome(annualIncome);
-					}}
+					value={annualIncome}
+					onChange={updateAnnualIncome}
 					suffix="$"
 					help={
 						<>
-							<a
-								className="is-underlined"
-								href={
-									canadian
-										? 'https://www.wealthsimple.com/en-ca/tool/tax-calculator'
-										: 'https://smartasset.com/taxes/income-taxes'
-								}
-								target="_blank"
-								rel="noreferrer"
+							<button
+								className={`button is-text inline-button`}
+								type="button"
+								onClick={() => setPretaxIncome(pretaxIncome === false ? annualIncome * 1.18 : false)}
 							>
-								After tax
-							</a>{' '}
-							(with {canadian ? 'FHSA/RRSP' : '401k'} contributions)
+								Calculate Taxes
+							</button>{' '}
+							(with {canadian ? `FHSA/RRSP` : '401(k)'} contributions)
 						</>
 					}
 				/>
-				{incomeFormat === 'hourly' && (
-					<NumberInput
-						className="ml-4"
-						label="Hours/week"
-						value={hours}
-						onChange={(newValue) => {
-							setHours(newValue);
-							if (newValue > 0 && hourlyIncome > 0) {
-								updateAnnualIncome(hourlyIncome * (52 * newValue));
-							}
-						}}
-					/>
-				)}
-				{/* todo: allow pre-tax + province? or just link to Wealthsimple? */}
 			</div>
 			<div className="is-flex is-align-items-center is-flex-wrap-wrap">
 				<div className="field is-flex is-flex-direction-column">

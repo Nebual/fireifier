@@ -126,7 +126,7 @@ export function useUrlState(paramId, def, transformer) {
 			arrayFormat: 'bracket',
 		});
 
-		const value = query[paramId] || def || '';
+		const value = query[paramId] || def;
 		if (transformer) {
 			return transformer(value, def);
 		}

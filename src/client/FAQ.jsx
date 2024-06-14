@@ -7,10 +7,11 @@ import {
 	AccordionItemHeading,
 	AccordionItemPanel,
 } from 'react-accessible-accordion';
-import { FaCanadianMapleLeaf, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaCanadianMapleLeaf } from 'react-icons/fa';
 
 import { useLocalStorage } from './hooks';
 import { useGlobalContext } from './AppContainer';
+import ExternalLink from './ExternalLink';
 import classNames from 'class-names';
 
 FAQ.propTypes = {
@@ -58,13 +59,16 @@ export default function FAQ({ income }) {
 				be done without reducing happiness.
 			</p>
 			<div className="mb-2">
-				<strong>Investments</strong> can come in many forms (stocks, ETFs, real estate rentals, etc), but a
-				great place to start is a low-fee, broad market index fund, such as{' '}
-				{canadian
-					? 'VGRO (20% bonds, 80% stocks, diversified across Canada/US/Europe/Asia) or VEQT (100% stocks)'
-					: 'VT (diversified across all US and Global stocks, in all industries)'}{' '}
-				. <i>Picking stocks</i> is a job in of itself, and a gamble the majority of players statistically lose
-				at. The entire market however, has reliably (eventually) always gone up, averaging 8.1%/y for 150 years.
+				<div className="box has-background-white-ter">
+					<strong>Investments</strong> can come in many forms (stocks, ETFs, real estate rentals, etc), but a
+					great place to start is a low-fee, broad market index fund, such as{' '}
+					{canadian
+						? 'VGRO (20% bonds, 80% stocks, diversified across Canada/US/Europe/Asia) or VEQT (100% stocks)'
+						: 'VT (diversified across all US and Global stocks, in all industries)'}{' '}
+					. <i>Picking stocks</i> is a job in of itself, and a gamble the majority of players statistically
+					lose at. The entire market however, has reliably (eventually) always gone up, averaging 8.1%/y for
+					150 years.
+				</div>
 				<p className="mt-4">
 					<div className="subtitle is-5 mb-1">
 						<a id="how-do-invest" href="#how-do-invest">
@@ -342,23 +346,25 @@ export default function FAQ({ income }) {
 					</li>
 				</ol>
 
-				<div className="subtitle is-6 mb-1">
-					<a id="tldr-type" href="#tldr-type">
-						tl;dr: Which account should I use?
-					</a>
+				<div className="box has-background-white-ter">
+					<div className="subtitle is-6 mb-1">
+						<a id="tldr-type" href="#tldr-type">
+							tl;dr: Which account should I use?
+						</a>
+					</div>
+					{income >= 60000 && (
+						<div>
+							With <a href="#income">${income} income</a>, prioritize: RDSP grants (if eligible), then
+							FHSA, RRSP, TFSA, and then non-registered.
+						</div>
+					)}
+					{income < 60000 && (
+						<div>
+							With <a href="#income">${income} income</a>, prioritize: RDSP grants (if eligible), then
+							FHSA, TFSA, RRSP, and then non-registered.
+						</div>
+					)}
 				</div>
-				{income >= 60000 && (
-					<div>
-						With <a href="#income">${income} income</a>, prioritize: RDSP grants (if eligible), then FHSA,
-						RRSP, TFSA, and then non-registered.
-					</div>
-				)}
-				{income < 60000 && (
-					<div>
-						With <a href="#income">${income} income</a>, prioritize: RDSP grants (if eligible), then FHSA,
-						TFSA, RRSP, and then non-registered.
-					</div>
-				)}
 			</div>
 
 			<div className={classNames('mb-2 mt-4')}>
@@ -384,7 +390,7 @@ export default function FAQ({ income }) {
 					Savings Rate = After Tax Income / Expenses
 					<br />
 					<img className="mt-1" src="/fire_table_5_4.jpg" />
-					<h5 className="subtitle is-5 mt-2 mb-1">Example:</h5>
+					<h5 className="subtitle is-6 mt-2 mb-1">Example:</h5>
 					<div>BC Minimum Wage ($17.40) x 40h = $36,192 (before tax) per year.</div>
 					<div>
 						<a href="https://www.wealthsimple.com/en-ca/tool/tax-calculator/british-columbia">After tax</a>{' '}
@@ -393,7 +399,7 @@ export default function FAQ({ income }) {
 					<div>
 						Assuming $1500 in rent/utilities, + $600 food/transit/phone/etc, thats $2100 in expenses, which
 						is a{' '}
-						<a href="/?expenses=25200&income=32878">
+						<a href="/?expenses=25200&income=32878&incomeFormat=hourly&pretaxIncome=36192">
 							<strong>24%</strong> savings rate, or being FI after 33 years (eg. age 51)
 						</a>
 						.
@@ -403,19 +409,19 @@ export default function FAQ({ income }) {
 						<ul className="pl-4">
 							<li>
 								- Minimum Wage but dropping to $600 rent ={' '}
-								<a href="/?expenses=14400&income=32878">
+								<a href="/?expenses=14400&income=32878&incomeFormat=hourly&pretaxIncome=36192">
 									<strong>56%</strong> savings rate = FI after 14 years.
 								</a>
 							</li>
 							<li>
 								- or instead getting a job paying $23/h (48k salary) with $2100 expenses ={' '}
-								<a href="/?expenses=25200&income=41905">
+								<a href="/?expenses=25200&income=41905&incomeFormat=hourly&pretaxIncome=47840">
 									<strong>40%</strong> savings rate = FI after 22 years.
 								</a>
 							</li>
 							<li>
 								- or both (48k salary, $1200 expenses) ={' '}
-								<a href="/?expenses=14400&income=41905">
+								<a href="/?expenses=14400&income=41905&incomeFormat=hourly&pretaxIncome=47840">
 									<strong>65%</strong> savings rate = FI after 10 years.
 								</a>
 							</li>
@@ -461,17 +467,5 @@ export default function FAQ({ income }) {
 				<AccordionItemPanel>{docsRendered}</AccordionItemPanel>
 			</AccordionItem>
 		</Accordion>
-	);
-}
-
-ExternalLink.propTypes = {
-	href: PropTypes.string.isRequired,
-	children: PropTypes.node,
-};
-function ExternalLink({ href, children }) {
-	return (
-		<a href={href} target="_blank" rel="noreferrer">
-			{children} <FaExternalLinkAlt style={{ fontSize: '0.75rem' }} />
-		</a>
 	);
 }
